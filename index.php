@@ -1,3 +1,3 @@
 <?php
-echo "<script>window.location = 'app/login.php'</script>";
+echo "<script>window.location = 'website/login.php'</script>";
 ?>

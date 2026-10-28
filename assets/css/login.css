@@ -1,260 +1,499 @@
 /* ==========================================================================
-   Login SIAK - STIE Nusantara Sangatta
-   100% Match Reference Design
+   Login PMB - Universitas Triatma Mulya PSDKU Jembrana
+   Premium, Clean & Elegant Design System
    ========================================================================== */
 
-*,
-*::before,
-*::after {
+:root {
+  --primary: #1877f2;
+  --primary-hover: #1464cc;
+  --primary-glow: rgba(24, 119, 242, 0.28);
+  --primary-subtle: #edf5ff;
+  
+  --navy-dark: #0f1e36;
+  --navy-main: #1e3a6a;
+  --navy-light: #2d4f8b;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  
+  --bg-page: #f4f7fc;
+  --bg-card: #ffffff;
+  --bg-input: #f1f5fb;
+  --bg-input-focus: #ffffff;
+  
+  --border-light: rgba(226, 232, 240, 0.9);
+  --border-input: #e2e8f0;
+  --border-focus: #1877f2;
+  
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+  
+  --shadow-card: 0 20px 45px -10px rgba(15, 30, 54, 0.08), 0 0 1px 1px rgba(15, 30, 54, 0.03);
+  --shadow-logo: 0 16px 36px -8px rgba(30, 58, 106, 0.16);
+  --shadow-btn: 0 8px 20px -4px var(--primary-glow);
+}
+
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html,
-body {
+html, body {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f6f8fc;
-  color: #1e293b;
-  line-height: 1.5;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background layout */
+/* Page Layout */
 .login-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 50% 50%;
+  grid-template-columns: 52% 48%;
   position: relative;
   overflow: hidden;
-  background-color: #f4f6fa;
+  background: radial-gradient(circle at 10% 15%, rgba(219, 234, 254, 0.7) 0%, transparent 45%),
+              radial-gradient(circle at 90% 85%, rgba(224, 231, 255, 0.6) 0%, transparent 50%),
+              #f5f8fd;
 }
 
-/* Soft ambient wave effect on left panel background */
+/* Background Ambient Orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glow-orb-1 {
+  width: 480px;
+  height: 480px;
+  background: rgba(59, 130, 246, 0.12);
+  top: -120px;
+  left: -80px;
+}
+
+.glow-orb-2 {
+  width: 420px;
+  height: 420px;
+  background: rgba(99, 102, 241, 0.1);
+  bottom: -100px;
+  right: -60px;
+}
+
+/* Left Brand Panel */
 .brand-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 8%;
+  border-right: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.brand-content {
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Campus Logo with Elegant Halo */
+.logo-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.logo-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(240, 246, 255, 0.4) 70%, transparent 100%);
+  border-radius: 50%;
+  z-index: 0;
+  filter: blur(10px);
+}
+
+.campus-logo {
+  position: relative;
+  z-index: 1;
+  width: 230px;
+  height: 230px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(30, 58, 106, 0.14));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.campus-logo:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Tag Badge */
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(24, 119, 242, 0.2);
+  border-radius: 9999px;
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.08);
+  margin-bottom: 20px;
+}
+
+.brand-content h1 {
+  font-size: 23px;
+  font-weight: 800;
+  color: var(--navy-dark);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+
+.brand-content h1 span {
+  color: var(--primary);
+  display: inline-block;
+}
+
+.brand-content h4 {
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 440px;
+  margin-bottom: 28px;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy-main);
+  backdrop-filter: blur(8px);
+}
+
+.feature-item i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+/* Right Form Panel */
+.form-panel {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 60px;
-  position: relative;
-  background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(235, 240, 248, 0.9) 0%, transparent 70%),
-    #f3f6fa;
 }
 
-.brand-panel::before {
-  content: "";
-  position: absolute;
-  top: -100px;
-  left: -80px;
-  width: 380px;
-  height: 380px;
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.brand-panel::after {
-  content: "";
-  position: absolute;
-  bottom: -60px;
-  left: 20%;
-  width: 440px;
-  height: 440px;
-  background: rgba(240, 244, 250, 0.7);
-  border-radius: 46% 54% 50% 50% / 45% 45% 55% 55%;
-  pointer-events: none;
-}
-
-.brand-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 520px;
-}
-
-.campus-logo {
-  width: 280px;
-  height: auto;
-  max-height: 300px;
-  object-fit: contain;
-  margin-bottom: 36px;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
-}
-
-.logo-fallback {
-  display: none;
-  width: 140px;
-  height: 140px;
-  border: 5px solid #15803d;
-  border-radius: 50%;
-  place-content: center;
-  font-weight: 800;
-  color: #166534;
-  margin-bottom: 24px;
-}
-
-.brand-content h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e3a6a;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-}
-
-/* Right side: Form Panel */
-.form-panel {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 60px 40px 20px;
-  background-color: transparent;
-}
-
-/* Crisp White Card */
+/* Login Card */
 .login-card {
   width: 100%;
-  max-width: 440px;
-  min-height: 520px;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 60px 48px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  max-width: 450px;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 48px 42px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  position: relative;
 }
 
-/* Headings */
+/* Header Inside Card */
 .login-heading {
-  margin-bottom: 36px;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.badge-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .login-heading h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy-dark);
   letter-spacing: 0.02em;
   margin-bottom: 6px;
 }
 
 .login-heading p {
-  font-size: 14px;
-  color: #94a3b8;
-  font-weight: 400;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-/* Form controls */
+/* Feedback Alerts */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.alert-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.alert-success {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Form Styles */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   width: 100%;
 }
 
 .form-group {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: left;
 }
 
-.login-form input {
-  width: 100%;
-  height: 44px;
-  padding: 0 16px;
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-dark);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
   font-size: 14px;
-  color: #334155;
-  background-color: #eaf2ff;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  outline: none;
-  transition: all 0.2s ease-in-out;
+  pointer-events: none;
+  transition: color 0.2s ease;
 }
 
-.login-form input::placeholder {
-  color: #64748b;
+.input-wrapper input {
+  width: 100%;
+  height: 48px;
+  padding: 0 42px 0 42px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-muted);
   font-size: 13.5px;
 }
 
-.login-form input:focus {
-  background-color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+.input-wrapper:focus-within .input-icon {
+  color: var(--primary);
 }
 
-/* Blue Login Button */
+.input-wrapper input:focus {
+  background-color: var(--bg-input-focus);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+/* Password Toggle Icon */
+.btn-toggle-pwd {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.btn-toggle-pwd:hover {
+  color: var(--primary);
+}
+
+/* Remember me & Forgot link */
+.form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-top: -2px;
+}
+
+.remember-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-check input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Submit Button */
 .login-button {
   width: 100%;
-  height: 44px;
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 600;
+  height: 48px;
+  margin-top: 6px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
   color: #ffffff;
-  background-color: #1a7cfc;
+  background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-btn);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .login-button:hover {
-  background-color: #0e6fe8;
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(24, 119, 242, 0.4);
 }
 
 .login-button:active {
-  transform: scale(0.99);
+  transform: translateY(0);
 }
 
-/* Help text below button */
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading Spinner */
+.spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Help text footer */
 .help-text {
-  margin-top: 32px;
+  margin-top: 28px;
+  text-align: center;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .help-text a {
-  color: #1a7cfc;
+  color: var(--primary);
   text-decoration: none;
-  font-weight: 600;
-  margin-left: 2px;
+  font-weight: 700;
+  margin-left: 3px;
 }
 
 .help-text a:hover {
   text-decoration: underline;
 }
 
-/* Screen reader only utility */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Responsive Styles */
-@media (max-width: 992px) {
+/* Responsive Rules */
+@media (max-width: 1024px) {
   .login-page {
-    grid-template-columns: 45% 55%;
+    grid-template-columns: 46% 54%;
   }
 
   .brand-panel {
-    padding: 30px;
-  }
-
-  .form-panel {
-    padding: 30px 40px 30px 10px;
+    padding: 40px 5%;
   }
 
   .campus-logo {
-    width: 220px;
+    width: 190px;
+    height: 190px;
   }
 
   .brand-content h1 {
@@ -262,34 +501,38 @@ body {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .login-page {
     grid-template-columns: 1fr;
     min-height: 100vh;
   }
 
   .brand-panel {
-    padding: 40px 20px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 45px 24px 30px;
   }
 
   .campus-logo {
-    width: 180px;
-    margin-bottom: 20px;
+    width: 150px;
+    height: 150px;
+    margin-bottom: 16px;
   }
 
-  .brand-content h1 {
-    font-size: 19px;
-    max-width: 360px;
+  .brand-features {
+    display: none;
+  }
+
+  .brand-content h4 {
+    margin-bottom: 10px;
   }
 
   .form-panel {
-    padding: 20px 20px 40px;
-    justify-content: center;
+    padding: 30px 20px 48px;
   }
 
   .login-card {
-    max-width: 400px;
-    min-height: auto;
-    padding: 36px 28px;
+    padding: 36px 26px;
+    box-shadow: 0 10px 25px -5px rgba(15, 30, 54, 0.06);
   }
 }
