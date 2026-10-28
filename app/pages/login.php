@@ -1,10 +1,17 @@
 <?php
+// app/pages/login.php
 session_start();
 
-// Panggil Controller dari app/controllers/process.php
-require_once __DIR__ . '/../app/controllers/process.php';
+// PERBAIKAN 1: Arahkan langsung ke dashboard.php (karena satu folder di dalam pages)
+if (isset($_SESSION['login'])) {
+    header("Location: dashboard.php");
+    exit;
+}
 
-$logo = '../assets/images/image.png';
+// Arahkan ke lokasi controller yang benar
+require_once __DIR__ . '/../controllers/process.php';
+
+$logo = '../../assets/images/image.png'; // Path logo disesuaikan
 $error_message = '';
 $success_message = '';
 
@@ -19,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success_message = $result['message'];
         echo "<script>
             setTimeout(function() {
-                window.location.href = 'index.php';
+                // PERBAIKAN 2: Redirect JavaScript ke dashboard.php
+                window.location.href = 'dashboard.php'; 
             }, 1000);
         </script>";
     } else {
@@ -37,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/login.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/login.css?v=<?= time() ?>">
 </head>
 <body>
     <main class="login-page">
@@ -80,7 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <form class="login-form" action="login.php" method="post" id="loginForm" onsubmit="handleFormSubmit()">
+                <!-- PERBAIKAN 3: action diubah menjadi kosong agar mengirim ke file ini sendiri -->
+                <form class="login-form" action="" method="post" id="loginForm" onsubmit="handleFormSubmit()">
                     <!-- Username Input -->
                     <div class="form-group">
                         <label for="username">Username</label>

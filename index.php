@@ -1,3 +1,4 @@
 <?php
-echo "<script>window.location = 'website/login.php'</script>";
+// SPK_PMB/index.php
+echo "<script>window.location = 'app/pages/login.php'</script>";
 ?>
