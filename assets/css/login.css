@@ -1,0 +1,295 @@
+/* ==========================================================================
+   Login SIAK - STIE Nusantara Sangatta
+   100% Match Reference Design
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f6f8fc;
+  color: #1e293b;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background layout */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 50% 50%;
+  position: relative;
+  overflow: hidden;
+  background-color: #f4f6fa;
+}
+
+/* Soft ambient wave effect on left panel background */
+.brand-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 60px;
+  position: relative;
+  background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.8) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(235, 240, 248, 0.9) 0%, transparent 70%),
+    #f3f6fa;
+}
+
+.brand-panel::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  left: -80px;
+  width: 380px;
+  height: 380px;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.brand-panel::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  left: 20%;
+  width: 440px;
+  height: 440px;
+  background: rgba(240, 244, 250, 0.7);
+  border-radius: 46% 54% 50% 50% / 45% 45% 55% 55%;
+  pointer-events: none;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 520px;
+}
+
+.campus-logo {
+  width: 280px;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
+  margin-bottom: 36px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
+}
+
+.logo-fallback {
+  display: none;
+  width: 140px;
+  height: 140px;
+  border: 5px solid #15803d;
+  border-radius: 50%;
+  place-content: center;
+  font-weight: 800;
+  color: #166534;
+  margin-bottom: 24px;
+}
+
+.brand-content h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a6a;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* Right side: Form Panel */
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 60px 40px 20px;
+  background-color: transparent;
+}
+
+/* Crisp White Card */
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  min-height: 520px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 60px 48px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Headings */
+.login-heading {
+  margin-bottom: 36px;
+}
+
+.login-heading h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.login-heading p {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Form controls */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.form-group {
+  width: 100%;
+}
+
+.login-form input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #334155;
+  background-color: #eaf2ff;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.login-form input::placeholder {
+  color: #64748b;
+  font-size: 13.5px;
+}
+
+.login-form input:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Blue Login Button */
+.login-button {
+  width: 100%;
+  height: 44px;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #1a7cfc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.login-button:hover {
+  background-color: #0e6fe8;
+}
+
+.login-button:active {
+  transform: scale(0.99);
+}
+
+/* Help text below button */
+.help-text {
+  margin-top: 32px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.help-text a {
+  color: #1a7cfc;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.help-text a:hover {
+  text-decoration: underline;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .login-page {
+    grid-template-columns: 45% 55%;
+  }
+
+  .brand-panel {
+    padding: 30px;
+  }
+
+  .form-panel {
+    padding: 30px 40px 30px 10px;
+  }
+
+  .campus-logo {
+    width: 220px;
+  }
+
+  .brand-content h1 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+  }
+
+  .brand-panel {
+    padding: 40px 20px 20px;
+  }
+
+  .campus-logo {
+    width: 180px;
+    margin-bottom: 20px;
+  }
+
+  .brand-content h1 {
+    font-size: 19px;
+    max-width: 360px;
+  }
+
+  .form-panel {
+    padding: 20px 20px 40px;
+    justify-content: center;
+  }
+
+  .login-card {
+    max-width: 400px;
+    min-height: auto;
+    padding: 36px 28px;
+  }
+}
