@@ -1,0 +1,622 @@
+[
+  {
+    "id": 1,
+    "nama": "Ahmad Fauzan Pratama",
+    "nisn": "0058291823",
+    "prodi": "Teknik Informatika",
+    "tahun": "2026",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3273011405050002",
+      "jenis_kelamin": "Laki-laki",
+      "tempat_lahir": "Bandung",
+      "tanggal_lahir": "14 Mei 2005",
+      "asal_sekolah": "SMAN 1 Bandung",
+      "jurusan_asal": "MIPA",
+      "email": "ahmad.fauzan@gmail.com",
+      "no_hp": "0812-3456-7890",
+      "alamat": "Jl. Merdeka No. 45, Coblong, Kota Bandung",
+      "jalur": "Jalur Mandiri / CBT"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 88.5,
+          "bobot": "30%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 85.0,
+          "bobot": "25%",
+          "keterangan": "Tinggi"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 90.0,
+          "bobot": "20%",
+          "keterangan": "Sangat Memuaskan"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 80.0,
+          "bobot": "15%",
+          "keterangan": "Juara 2 Provinsi"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 75.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8524",
+      "vektor_v": "0.8912",
+      "peringkat": 1
+    }
+  },
+  {
+    "id": 2,
+    "nama": "Siti Nurhaliza Putri",
+    "nisn": "0061298471",
+    "prodi": "Sistem Informasi",
+    "tahun": "2026",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3273026809050003",
+      "jenis_kelamin": "Perempuan",
+      "tempat_lahir": "Cimahi",
+      "tanggal_lahir": "28 September 2005",
+      "asal_sekolah": "SMAN 2 Cimahi",
+      "jurusan_asal": "IPS",
+      "email": "siti.nurhaliza@gmail.com",
+      "no_hp": "0813-8877-2211",
+      "alamat": "Jl. Gatot Subroto No. 12, Cimahi Tengah",
+      "jalur": "Prestasi Akademik"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 92.0,
+          "bobot": "30%",
+          "keterangan": "Unggul"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 82.5,
+          "bobot": "25%",
+          "keterangan": "Tinggi"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 88.0,
+          "bobot": "20%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 70.0,
+          "bobot": "15%",
+          "keterangan": "Tingkat Kota"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 80.0,
+          "bobot": "10%",
+          "keterangan": "Sesuai Kriteria"
+        }
+      ],
+      "vektor_s": "0.8340",
+      "vektor_v": "0.8720",
+      "peringkat": 2
+    }
+  },
+  {
+    "id": 3,
+    "nama": "Rizky Dwi Kurniawan",
+    "nisn": "0053910284",
+    "prodi": "Teknik Informatika",
+    "tahun": "2026",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3204121203050001",
+      "jenis_kelamin": "Laki-laki",
+      "tempat_lahir": "Soreang",
+      "tanggal_lahir": "12 Maret 2005",
+      "asal_sekolah": "SMKN 1 Katapang",
+      "jurusan_asal": "RPL (Rekayasa Perangkat Lunak)",
+      "email": "rizky.kurniawan@gmail.com",
+      "no_hp": "0821-9988-3344",
+      "alamat": "Jl. Kopo Sayati Km 8, Bandung Selatan",
+      "jalur": "Jalur Mandiri / CBT"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 85.0,
+          "bobot": "30%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 88.0,
+          "bobot": "25%",
+          "keterangan": "Sangat Tinggi"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 84.0,
+          "bobot": "20%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 75.0,
+          "bobot": "15%",
+          "keterangan": "LKS Nasional"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 70.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8190",
+      "vektor_v": "0.8563",
+      "peringkat": 3
+    }
+  },
+  {
+    "id": 4,
+    "nama": "Dewi Ayu Lestari",
+    "nisn": "0064528190",
+    "prodi": "Manajemen Informatika",
+    "tahun": "2026",
+    "status": "Cadangan",
+    "identitas": {
+      "nik": "3273055507050004",
+      "jenis_kelamin": "Perempuan",
+      "tempat_lahir": "Sumedang",
+      "tanggal_lahir": "15 Juli 2005",
+      "asal_sekolah": "SMAN 1 Jatinangor",
+      "jurusan_asal": "IPS",
+      "email": "dewi.lestari@gmail.com",
+      "no_hp": "0857-1234-5678",
+      "alamat": "Jl. Raya Jatinangor No. 88, Sumedang",
+      "jalur": "Reguler Gelombang 1"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 78.0,
+          "bobot": "30%",
+          "keterangan": "Cukup"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 74.0,
+          "bobot": "25%",
+          "keterangan": "Cukup"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 80.0,
+          "bobot": "20%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 65.0,
+          "bobot": "15%",
+          "keterangan": "Peserta Lomba"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 70.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.7450",
+      "vektor_v": "0.7788",
+      "peringkat": 12
+    }
+  },
+  {
+    "id": 5,
+    "nama": "Budi Santoso",
+    "nisn": "0059182736",
+    "prodi": "Teknik Informatika",
+    "tahun": "2025",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3273030201040005",
+      "jenis_kelamin": "Laki-laki",
+      "tempat_lahir": "Jakarta",
+      "tanggal_lahir": "02 Januari 2004",
+      "asal_sekolah": "SMAN 68 Jakarta",
+      "jurusan_asal": "MIPA",
+      "email": "budi.santoso@yahoo.com",
+      "no_hp": "0819-4455-6677",
+      "alamat": "Jl. Salemba Raya No. 10, Jakarta Pusat",
+      "jalur": "Jalur Mandiri"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 86.0,
+          "bobot": "30%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 81.0,
+          "bobot": "25%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 85.0,
+          "bobot": "20%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 75.0,
+          "bobot": "15%",
+          "keterangan": "Tingkat Kota"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 75.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8090",
+      "vektor_v": "0.8458",
+      "peringkat": 4
+    }
+  },
+  {
+    "id": 6,
+    "nama": "Nadia Fitriani",
+    "nisn": "0057391824",
+    "prodi": "Sistem Informasi",
+    "tahun": "2025",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3209144411040006",
+      "jenis_kelamin": "Perempuan",
+      "tempat_lahir": "Cirebon",
+      "tanggal_lahir": "04 November 2004",
+      "asal_sekolah": "SMAN 2 Cirebon",
+      "jurusan_asal": "MIPA",
+      "email": "nadia.fitriani@gmail.com",
+      "no_hp": "0877-3322-1100",
+      "alamat": "Jl. Kartini No. 25, Kejaksan, Kota Cirebon",
+      "jalur": "Kemitraan Sekolah"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 89.0,
+          "bobot": "30%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 84.0,
+          "bobot": "25%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 87.0,
+          "bobot": "20%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 82.0,
+          "bobot": "15%",
+          "keterangan": "Juara Debat Bhs Inggris"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 70.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8410",
+      "vektor_v": "0.8793",
+      "peringkat": 2
+    }
+  },
+  {
+    "id": 7,
+    "nama": "Fajar Hidayat",
+    "nisn": "0052817392",
+    "prodi": "Teknik Komputer",
+    "tahun": "2025",
+    "status": "Tidak Diterima",
+    "identitas": {
+      "nik": "3273041908040007",
+      "jenis_kelamin": "Laki-laki",
+      "tempat_lahir": "Tasikmalaya",
+      "tanggal_lahir": "19 Agustus 2004",
+      "asal_sekolah": "SMKN 2 Tasikmalaya",
+      "jurusan_asal": "TKJ (Teknik Komputer & Jaringan)",
+      "email": "fajar.hidayat@gmail.com",
+      "no_hp": "0896-5544-3322",
+      "alamat": "Jl. Sutisna Senjaya No. 102, Tasikmalaya",
+      "jalur": "Reguler Gelombang 2"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 68.0,
+          "bobot": "30%",
+          "keterangan": "Kurang"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 62.0,
+          "bobot": "25%",
+          "keterangan": "Kurang"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 70.0,
+          "bobot": "20%",
+          "keterangan": "Cukup"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 55.0,
+          "bobot": "15%",
+          "keterangan": "Tidak Ada"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 65.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Rendah"
+        }
+      ],
+      "vektor_s": "0.6480",
+      "vektor_v": "0.6775",
+      "peringkat": 28
+    }
+  },
+  {
+    "id": 8,
+    "nama": "Anisa Rahmawati",
+    "nisn": "0048192735",
+    "prodi": "Manajemen Informatika",
+    "tahun": "2024",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3204285112030008",
+      "jenis_kelamin": "Perempuan",
+      "tempat_lahir": "Bandung",
+      "tanggal_lahir": "11 Desember 2003",
+      "asal_sekolah": "SMAN 1 Baleendah",
+      "jurusan_asal": "IPS",
+      "email": "anisa.rahmawati@gmail.com",
+      "no_hp": "0812-7766-5544",
+      "alamat": "Jl. Raya Baleendah No. 54, Kab. Bandung",
+      "jalur": "Jalur Mandiri"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 87.0,
+          "bobot": "30%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 83.0,
+          "bobot": "25%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 85.0,
+          "bobot": "20%",
+          "keterangan": "Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 70.0,
+          "bobot": "15%",
+          "keterangan": "Tingkat Kota"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 75.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8115",
+      "vektor_v": "0.8484",
+      "peringkat": 5
+    }
+  },
+  {
+    "id": 9,
+    "nama": "Dimas Arya Pangestu",
+    "nisn": "0049283741",
+    "prodi": "Teknik Komputer",
+    "tahun": "2024",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3273062304030009",
+      "jenis_kelamin": "Laki-laki",
+      "tempat_lahir": "Garut",
+      "tanggal_lahir": "23 April 2003",
+      "asal_sekolah": "SMAN 1 Garut",
+      "jurusan_asal": "MIPA",
+      "email": "dimas.arya@gmail.com",
+      "no_hp": "0852-1122-3344",
+      "alamat": "Jl. Cimanuk No. 76, Tarogong Kidul, Garut",
+      "jalur": "Prestasi Akademik"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 90.0,
+          "bobot": "30%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 86.0,
+          "bobot": "25%",
+          "keterangan": "Tinggi"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 88.0,
+          "bobot": "20%",
+          "keterangan": "Sangat Baik"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 78.0,
+          "bobot": "15%",
+          "keterangan": "Olimpiade Fisika Kab"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 75.0,
+          "bobot": "10%",
+          "keterangan": "Ekonomi Menengah"
+        }
+      ],
+      "vektor_s": "0.8450",
+      "vektor_v": "0.8835",
+      "peringkat": 2
+    }
+  },
+  {
+    "id": 10,
+    "nama": "Putri Maharani",
+    "nisn": "0068392015",
+    "prodi": "Teknik Informatika",
+    "tahun": "2026",
+    "status": "Diterima",
+    "identitas": {
+      "nik": "3273086510050010",
+      "jenis_kelamin": "Perempuan",
+      "tempat_lahir": "Bandung",
+      "tanggal_lahir": "25 Oktober 2005",
+      "asal_sekolah": "SMAN 3 Bandung",
+      "jurusan_asal": "MIPA",
+      "email": "putri.maharani@gmail.com",
+      "no_hp": "0822-6655-4433",
+      "alamat": "Jl. Belitung No. 8, Merdeka, Sumur Bandung",
+      "jalur": "Prestasi Akademik"
+    },
+    "nilai": {
+      "kriteria": [
+        {
+          "kode": "C1",
+          "nama": "Nilai Rapor / Akademik",
+          "nilai": 94.0,
+          "bobot": "30%",
+          "keterangan": "Unggul"
+        },
+        {
+          "kode": "C2",
+          "nama": "Tes Potensi Akademik (TPA)",
+          "nilai": 89.0,
+          "bobot": "25%",
+          "keterangan": "Sangat Tinggi"
+        },
+        {
+          "kode": "C3",
+          "nama": "Tes Wawancara & Minat",
+          "nilai": 92.0,
+          "bobot": "20%",
+          "keterangan": "Sangat Memuaskan"
+        },
+        {
+          "kode": "C4",
+          "nama": "Prestasi Non-Akademik",
+          "nilai": 85.0,
+          "bobot": "15%",
+          "keterangan": "Juara 1 Web Design"
+        },
+        {
+          "kode": "C5",
+          "nama": "Penghasilan Orang Tua",
+          "nilai": 80.0,
+          "bobot": "10%",
+          "keterangan": "Sesuai Kriteria"
+        }
+      ],
+      "vektor_s": "0.8980",
+      "vektor_v": "0.9388",
+      "peringkat": 1
+    }
+  }
+]

@@ -3,4 +3,20 @@
 Username : admin
 Password : salamloroati26
 
-<<========================== TUGAS SPK ==========================>>
+<<========================== CATATAN ==========================>
+Tius : (28/10/2026)
+    <<================= UPDATE =================>> 
+        1. Perbaiki tampilan pada dashboard
+        2. Hapus file tidak penting (scss)
+        3. data sementara dari pendaftar.json
+        4. animasi dashboard menggunakan js dan dipisahkan
+        5. Memperbarui Head.php
+
+    <<================= TARGET =================>>    1. 
+        1. Perbaikan pada header yang tidak responsif
+        2. Tampilan pada android
+
+
+
+
+<!-- SILAHKAN ISI CATATAN KALIAN DI SINI -->
