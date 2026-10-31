@@ -153,31 +153,6 @@ $chart_beasiswa = $dashboardData['chart_beasiswa'];
             </div>
         </div>
     </div>
-
-    <div class="bg-gradient-to-r from-purple-900/40 via-purple-800/30 to-pink-900/30 border border-purple-500/20 rounded-2xl p-6 shadow-sm">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-                <h3 class="text-lg font-bold text-gray-800 mb-1">Sistem Pendukung Keputusan PMB</h3>
-                <p class="text-xs text-gray-500 max-w-2xl leading-relaxed">
-                    Sistem ini mengimplementasikan metode <strong>Weight Product (WP)</strong> untuk memproses penilaian dan perangkingan penerimaan mahasiswa baru serta penentuan penerima beasiswa.
-                </p>
-            </div>
-            <div class="flex items-center gap-3 shrink-0">
-                <a href="mahasiswa.php?page=mahasiswa" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-medium text-xs rounded-lg shadow-sm transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Lihat Data Mahasiswa
-                </a>
-                <a href="kriteria.php?page=kriteria" class="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-xs rounded-lg border border-gray-200 shadow-sm transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    Kelola Kriteria
-                </a>
-            </div>
-        </div>
-    </div>
 </main>
 </div>
 

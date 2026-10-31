@@ -22,7 +22,7 @@ $isAnalisis = in_array($page, ['analisis1', 'analisis2', 'analisis3']);
                     
                     <a href="kriteria.php?page=kriteria" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'kriteria') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Data Kriteria</a>
                     <a href="mahasiswa.php?page=mahasiswa" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'mahasiswa') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Data Mahasiswa</a>
-                    <a href="alternatif.php?page=alternatif" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Set Alternatif</a>
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Set Alternatif</a>
                 </div>
             </div>
         </div>
@@ -34,9 +34,9 @@ $isAnalisis = in_array($page, ['analisis1', 'analisis2', 'analisis3']);
             </button>
             <div id="menuAnalisis" class="overflow-hidden transition-all duration-300 <?= $isAnalisis ? 'max-h-64 opacity-100 mt-1' : 'max-h-0 opacity-0' ?>">
                 <div class="flex flex-col space-y-1 pl-4 pr-2 py-2 border-l-2 border-gray-700 ml-4 mt-1">
-                    <a href="analisis1.php?page=analisis1" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis1') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 1</a>
-                    <a href="analisis2.php?page=analisis2" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis2') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 2</a>
-                    <a href="analisis3.php?page=analisis3" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis3') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 3</a>
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis1') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 1</a>
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis2') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 2</a>
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'analisis3') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Analisis 3</a>
                 </div>
             </div>
         </div>

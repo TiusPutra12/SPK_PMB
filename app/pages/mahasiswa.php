@@ -681,7 +681,7 @@ echo $style_css;
                 </div>
             </div>
         </div>
-        <script src="../../assets/js/dashboard.js?v=<?= time() ?>"></script>
+        <script src="../../assets/js/mahasiswa.js?v=<?= time() ?>"></script>
     <?php endif; ?>
 </main>
 </div> 
