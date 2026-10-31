@@ -1,17 +1,12 @@
 <?php
-// app/pages/login.php
 session_start();
-
-// PERBAIKAN 1: Arahkan langsung ke dashboard.php (karena satu folder di dalam pages)
 if (isset($_SESSION['login'])) {
     header("Location: dashboard.php");
     exit;
 }
-
-// Arahkan ke lokasi controller yang benar
 require_once __DIR__ . '/../controllers/process.php';
 
-$logo = '../../assets/images/image.png'; // Path logo disesuaikan
+$logo = '../../assets/images/image.png'; 
 $error_message = '';
 $success_message = '';
 
@@ -26,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success_message = $result['message'];
         echo "<script>
             setTimeout(function() {
-                // PERBAIKAN 2: Redirect JavaScript ke dashboard.php
+                
                 window.location.href = 'dashboard.php'; 
             }, 1000);
         </script>";
@@ -65,8 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h4>Selamat datang bagi pengguna, silakan masuk untuk mengakses sistem pendukung keputusan penerimaan mahasiswa baru.</h4>
             </div>
         </section>
-
-        <!-- Right Form Section -->
         <section class="form-panel" aria-label="Form login">
             <div class="login-card">
                 <header class="login-heading">
@@ -88,9 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <!-- PERBAIKAN 3: action diubah menjadi kosong agar mengirim ke file ini sendiri -->
                 <form class="login-form" action="" method="post" id="loginForm" onsubmit="handleFormSubmit()">
-                    <!-- Username Input -->
+                    
                     <div class="form-group">
                         <label for="username">Username</label>
                         <div class="input-wrapper">
@@ -108,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <!-- Password Input -->
+                    
                     <div class="form-group password-group">
                         <label for="password">Password</label>
                         <div class="input-wrapper">
@@ -127,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <!-- Remember & Hint -->
+                    
                     <div class="form-meta">
                         <label class="remember-check">
                             <input type="checkbox" name="remember">
@@ -136,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <a href="javascript:void(0)" class="forgot-link" onclick="handleHelp()">Lupa Password?</a>
                     </div>
 
-                    <!-- Submit Button -->
+                    
                     <button type="submit" class="login-button" id="btnLogin">
                         <span class="btn-text">Login ke Sistem</span>
                         <i class="fa-solid fa-arrow-right-to-bracket btn-icon"></i>
@@ -152,36 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </section>
     </main>
 
-    <script>
-        function togglePasswordVisibility() {
-            const pwd = document.getElementById('password');
-            const icon = document.getElementById('toggleIcon');
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                icon.className = 'fa-regular fa-eye-slash';
-            } else {
-                pwd.type = 'password';
-                icon.className = 'fa-regular fa-eye';
-            }
-        }
-
-        function handleFormSubmit() {
-            const btn = document.getElementById('btnLogin');
-            const text = btn.querySelector('.btn-text');
-            const icon = btn.querySelector('.btn-icon');
-            const spinner = document.getElementById('btnSpinner');
-            
-            if (btn && spinner) {
-                btn.disabled = true;
-                if (text) text.textContent = 'Memproses...';
-                if (icon) icon.style.display = 'none';
-                spinner.style.display = 'inline-block';
-            }
-        }
-
-        function handleHelp() {
-            alert("Informasi Bantuan IT PMB:\n\nSilakan hubungi Tim IT Kampus Universitas Triatma Mulya PSDKU Jembrana untuk verifikasi atau reset akun.");
-        }
-    </script>
+    <script src=../../assets/js/login.js?v=<?= time() ?>></script>
 </body>
 </html>

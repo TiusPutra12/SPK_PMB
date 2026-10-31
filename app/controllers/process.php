@@ -1,5 +1,5 @@
 <?php
-// app/controllers/process.php
+
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -26,11 +26,11 @@ class AuthController {
             ];
         }
 
-        // Menggunakan UserModel untuk verifikasi
+        
         $user = $this->userModel->verifyLogin($username, $password);
 
         if ($user) {
-            $_SESSION['login']    = true; // Gunakan 'login' agar cocok dengan index.php kita
+            $_SESSION['login']    = true;
             $_SESSION['username'] = $user['username'];
             
             return [

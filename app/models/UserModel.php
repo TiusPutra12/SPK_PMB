@@ -1,5 +1,5 @@
 <?php
-// app/models/UserModel.php
+
 require_once __DIR__ . '/../includes/koneksi.php';
 
 class UserModel {
@@ -11,7 +11,7 @@ class UserModel {
     }
 
     public function getUserByUsername($username) {
-        // Ambil data user dari tabel 'users'
+        
         $stmt = mysqli_prepare($this->db, "SELECT * FROM users WHERE username = ? LIMIT 1");
         if (!$stmt) {
             return null;
@@ -32,7 +32,7 @@ class UserModel {
             return false;
         }
 
-        // Kita gunakan hash SHA-512 sesuai kesepakatan database kita
+        
         $hashSha512 = hash('sha512', $password);
 
         if ($user['password'] === $hashSha512) {

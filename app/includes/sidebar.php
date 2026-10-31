@@ -9,7 +9,7 @@ $isAnalisis = in_array($page, ['analisis1', 'analisis2', 'analisis3']);
     </div>
     
     <nav class="flex-1 px-4 py-6 space-y-2">
-        <!-- Tautan diubah menjadi namafile.php?page=namapage -->
+        
         <a href="dashboard.php?page=beranda" class="block px-4 py-3 rounded-lg transition-all <?= ($page == 'beranda' || $page == '') ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/30' : 'text-gray-400 hover:bg-gray-800 hover:text-pink-400' ?>">Beranda</a>
         
         <div class="relative pt-2">
@@ -19,7 +19,7 @@ $isAnalisis = in_array($page, ['analisis1', 'analisis2', 'analisis3']);
             </button>
             <div id="menuMaster" class="overflow-hidden transition-all duration-300 <?= $isMasterData ? 'max-h-64 opacity-100 mt-1' : 'max-h-0 opacity-0' ?>">
                 <div class="flex flex-col space-y-1 pl-4 pr-2 py-2 border-l-2 border-gray-700 ml-4 mt-1">
-                    <a href="user.php?page=user" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'user') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Data User</a>
+                    
                     <a href="kriteria.php?page=kriteria" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'kriteria') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Data Kriteria</a>
                     <a href="mahasiswa.php?page=mahasiswa" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'mahasiswa') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Data Mahasiswa</a>
                     <a href="alternatif.php?page=alternatif" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-pink-400 font-medium' : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50' ?>">Set Alternatif</a>

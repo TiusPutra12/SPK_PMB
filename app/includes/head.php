@@ -43,11 +43,11 @@ $login_css = '<link rel="stylesheet" href="../../assets/css/login.css?v=' . time
     </script>
 </head>
 
-<body class="bg-darker text-gray-200 font-sans antialiased flex h-screen overflow-hidden">
+<body class="bg-darker text-gray-200 font-sans antialiased flex h-screen overflow-hidden position:fixed">
 
 <?php include '../includes/sidebar.php'; ?>
-<div class="flex-1 flex flex-col overflow-y-auto bg-dark min-w-0">
-    <header class="h-20 flex items-center justify-between px-8 bg-card border-b border-gray-700 sticky top-0 z-10 shadow-sm">
+<div class="flex-1 flex flex-col min-w-0 bg-dark overflow-hidden">
+    <header class="h-20 flex-shrink-0 flex items-center justify-between px-8 bg-card border-b border-black z-20 shadow-sm">
         <div class="flex items-center gap-3">
             <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-pink-600 tracking-wide">
                 <?php echo "$page_title";?>

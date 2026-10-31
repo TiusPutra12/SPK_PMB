@@ -1,10 +1,10 @@
 <?php
-// app/includes/koneksi.php
+
 
 $host = 'localhost';
-$user = 'root'; // User default Laragon
-$pass = '';     // Password default Laragon
-$db   = 'pmbDB'; // Nama database diperbarui
+$user = 'root'; 
+$pass = '';     
+$db   = 'pmbdb'; 
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
 

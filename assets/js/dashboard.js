@@ -1,125 +1,101 @@
-function selectStudent(id) {
-    const splitContainer = document.getElementById('splitContainer');
-    const targetRow = document.querySelector(`tr.data-row[data-id="${id}"]`);
-    const targetPane = document.getElementById(`pane-${id}`);
 
-    if (!splitContainer || !targetRow || !targetPane) return;
 
-    splitContainer.classList.add('is-split');
-    document.querySelectorAll('tr.data-row').forEach(row => row.classList.remove('is-active'));
-    targetRow.classList.add('is-active');
-    document.querySelectorAll('.student-detail-pane').forEach(pane => {
-        pane.classList.remove('is-active-pane');
-        pane.classList.add('hidden');
-    });
-    targetPane.classList.remove('hidden');
-    targetPane.classList.add('is-active-pane');
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('chartTahunMasuk');
+    if (!ctx) return;
 
-    const nama = targetPane.getAttribute('data-nama') || '';
-    const inisial = targetPane.getAttribute('data-inisial') || 'A';
-    const sub = targetPane.getAttribute('data-sub') || '';
-    const status = targetPane.getAttribute('data-status') || 'Diterima';
-    const statusClass = targetPane.getAttribute('data-statusclass') || 'diterima';
-    const avatarEl = document.getElementById('detailAvatar');
-    const namaHeaderEl = document.getElementById('detailNamaHeader');
-    const subHeaderEl = document.getElementById('detailSubHeader');
-    const badgeHeaderEl = document.getElementById('detailBadgeHeader');
+    const chartData = window.dashboardChartData || {};
+    const labels = chartData.labels || [];
+    const dataTotal = chartData.total || [];
+    const dataDiterima = chartData.diterima || [];
+    const dataBeasiswa = chartData.beasiswa || [];
 
-    if (avatarEl) avatarEl.textContent = inisial;
-    if (namaHeaderEl) namaHeaderEl.textContent = nama;
-    if (subHeaderEl) subHeaderEl.textContent = sub;
-    if (badgeHeaderEl) {
-        badgeHeaderEl.textContent = status;
-        badgeHeaderEl.className = `status-pill ${statusClass}`;
-    }
-    const detailBody = document.getElementById('detailBodyContainer');
-    if (detailBody) detailBody.scrollTop = 0;
-}
-function closeStudentDetail() {
-    const splitContainer = document.getElementById('splitContainer');
-    if (splitContainer) {
-        splitContainer.classList.remove('is-split');
-    }
-
-    document.querySelectorAll('tr.data-row').forEach(row => row.classList.remove('is-active'));
-    document.querySelectorAll('.student-detail-pane').forEach(pane => {
-        pane.classList.remove('is-active-pane');
-        pane.classList.add('hidden');
-    });
-}
-
-window.selectStudent = selectStudent;
-window.closeStudentDetail = closeStudentDetail;
-window.toggleDetailRow = selectStudent;
-document.addEventListener('DOMContentLoaded', () => {
-    const filterProdi = document.getElementById('filterProdi');
-    const filterTahun = document.getElementById('filterTahun');
-    const searchNama = document.getElementById('searchNama');
-    const btnResetFilter = document.getElementById('btnResetFilter');
-    const counterData = document.getElementById('counterData');
-    const noDataNotice = document.getElementById('noDataNotice');
-    const dataRows = document.querySelectorAll('tr.data-row');
-
-    function applyFilter() {
-        if (!filterProdi || !filterTahun || !searchNama) return;
-
-        const selectedProdi = filterProdi.value.trim().toLowerCase();
-        const selectedTahun = filterTahun.value.trim().toLowerCase();
-        const searchKeyword = searchNama.value.trim().toLowerCase();
-
-        let visibleCount = 0;
-        let activeRowStillVisible = false;
-
-        dataRows.forEach(row => {
-            const prodi = (row.getAttribute('data-prodi') || '').toLowerCase();
-            const tahun = (row.getAttribute('data-tahun') || '').toLowerCase();
-            const nama = (row.getAttribute('data-nama') || '').toLowerCase();
-
-            const matchProdi = selectedProdi === '' || prodi === selectedProdi;
-            const matchTahun = selectedTahun === '' || tahun === selectedTahun;
-            const matchNama = searchKeyword === '' || nama.includes(searchKeyword);
-
-            if (matchProdi && matchTahun && matchNama) {
-                row.style.display = '';
-                visibleCount++;
-                const numCell = row.querySelector('.row-number');
-                if (numCell) numCell.textContent = visibleCount;
-
-                if (row.classList.contains('is-active')) {
-                    activeRowStillVisible = true;
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Terdaftar',
+                    data: dataTotal,
+                    borderColor: '#1d4ed8', 
+                    backgroundColor: 'rgba(29, 78, 216, 0.08)',
+                    tension: 0.45,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#1d4ed8',
+                    fill: false
+                },
+                {
+                    label: 'Diterima',
+                    data: dataDiterima,
+                    borderColor: '#16a34a', 
+                    backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                    tension: 0.45,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#16a34a',
+                    fill: false
+                },
+                {
+                    label: 'Penerima Beasiswa',
+                    data: dataBeasiswa,
+                    borderColor: '#f59e0b', 
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    tension: 0.45,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#f59e0b',
+                    fill: false
                 }
-            } else {
-                row.style.display = 'none';
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            plugins: {
+                legend: {
+                    display: false 
+                },
+                tooltip: {
+                    backgroundColor: '#1f2937',
+                    titleColor: '#f9fafb',
+                    bodyColor: '#f9fafb',
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(229, 231, 235, 0.6)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: { size: 12, weight: '500' }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        color: '#6b7280',
+                        font: { size: 12, weight: '500' }
+                    },
+                    grid: {
+                        color: 'rgba(229, 231, 235, 0.6)',
+                        drawBorder: false
+                    }
+                }
             }
-        });
-
-        if (!activeRowStillVisible) {
-            closeStudentDetail();
         }
-
-        if (counterData) {
-            counterData.textContent = `${visibleCount} Data`;
-        }
-
-        if (noDataNotice) {
-            if (visibleCount === 0) {
-                noDataNotice.classList.remove('hidden');
-            } else {
-                noDataNotice.classList.add('hidden');
-            }
-        }
-    }
-
-    if (filterProdi) filterProdi.addEventListener('change', applyFilter);
-    if (filterTahun) filterTahun.addEventListener('change', applyFilter);
-    if (searchNama) searchNama.addEventListener('input', applyFilter);
-
-    if (btnResetFilter) {
-        btnResetFilter.addEventListener('click', () => {
-            filterProdi.value = '';
-            filterTahun.value = '';
-            searchNama.value = '';
-            applyFilter();
-        });
-    }
+    });
 });
