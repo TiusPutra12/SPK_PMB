@@ -63,9 +63,16 @@ echo $style_css;
             $isEdit = ($aksi === 'edit');
             $id = $isEdit ? (int)$_GET['id'] : 0;
             $data = $isEdit ? ($mhsCtrl->getMahasiswaDetail($id) ?? []) : [];
-            $golongan_val = $data['golongan'] ?? 'Umum';
+            $golongan_val = $data['golongan'] ?? 'Beasiswa';
             $editNilai = $nilai_raw_mhs[$id] ?? [];
             $penghasilan_val = $data['penghasilan_orangtua'] ?? '';
+            $pekerjaan_ayah_val = $data['pekerjaan_ayah'] ?? '';
+            $pekerjaan_ibu_val = $data['pekerjaan_ibu'] ?? '';
+            $penghasilan_ayah_val = $data['penghasilan_ayah'] ?? '';
+            $penghasilan_ibu_val = $data['penghasilan_ibu'] ?? '';
+            $aset_kendaraan_val = $data['aset_kendaraan'] ?? '';
+            $aset_bangunan_val = $data['aset_bangunan'] ?? '';
+            $uang_makan_val = $data['uang_makan_harian'] ?? '';
         ?>
 
         <div class="flex justify-between items-center mb-6">
@@ -92,10 +99,10 @@ echo $style_css;
                         <span id="step-label-2" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Input Nilai</span>
                     </div>
                     
-                    <div id="tracker-line-3" class="flex-1 h-1 mx-2 sm:mx-4 bg-gray-200 rounded relative overflow-hidden" <?= $golongan_val == 'Umum' ? 'style="display:none;"' : '' ?>><div id="step-line-2" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
-                    <div id="tracker-node-3" class="flex-col items-center relative z-10 cursor-pointer" onclick="validateAndGoStep(3)" <?= $golongan_val == 'Umum' ? 'style="display:none;"' : 'style="display:flex;"' ?>>
+                    <div id="tracker-line-3" class="flex-1 h-1 mx-2 sm:mx-4 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-2" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
+                    <div id="tracker-node-3" class="flex flex-col items-center relative z-10 cursor-pointer" onclick="validateAndGoStep(3)">
                         <div id="step-node-3" class="w-12 h-12 rounded-full border-4 border-gray-300 bg-white text-gray-500 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300">3</div>
-                        <span id="step-label-3" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Beasiswa</span>
+                        <span id="step-label-3" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Pengajuan Beasiswa</span>
                     </div>
                 </div>
             </div>
@@ -109,6 +116,8 @@ echo $style_css;
                         <input type="hidden" name="id_mahasiswa" value="<?= $data['id_mahasiswa'] ?>">
                         <input type="hidden" name="status" value="<?= htmlspecialchars($data['status'] ?? 'Menunggu') ?>">
                     <?php endif; ?>
+                    <input type="hidden" name="nim" value="<?= htmlspecialchars($data['nim'] ?? '') ?>">
+                    <input type="hidden" id="golonganInput" name="golongan" value="<?= htmlspecialchars($golongan_val) ?>">
 
                     <div id="section-step-1" class="space-y-6">
                         <div class="p-6 border border-purple-300 rounded-xl bg-purple-50/20">
@@ -116,22 +125,10 @@ echo $style_css;
                                 <h3 class="text-sm font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-purple-200 text-purple-800 text-xs font-bold flex items-center justify-center">1</span> PROSES 1: IDENTITAS & DATA DIRI</h3>
                             </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                                <div class="filter-item">
-                                    <!-- KUNCI PERBAIKAN: Maxlength NIM diatur menjadi 12 -->
-                                    <label class="filter-label">NIM / Nomor Pendaftaran <span class="text-red-500">*</span></label>
-                                    <input type="text" id="nim" name="nim" maxlength="12" value="<?= htmlspecialchars($data['nim'] ?? '') ?>" required class="filter-input w-full bg-white" placeholder="Max: 12 Digit (Cth: 220101001)">
-                                </div>
+                            <div class="grid grid-cols-1 gap-5 mb-5">
                                 <div class="filter-item">
                                     <label class="filter-label">Nama Lengkap <span class="text-red-500">*</span></label>
                                     <input type="text" id="nama" name="nama" value="<?= htmlspecialchars($data['nama_mahasiswa'] ?? '') ?>" required class="filter-input w-full bg-white" placeholder="Masukkan nama lengkap">
-                                </div>
-                                <div class="filter-item md:col-span-2">
-                                    <label class="filter-label">Golongan Pendaftar <span class="text-red-500">*</span></label>
-                                    <select name="golongan" id="golonganSelect" required class="filter-select w-full bg-white" onchange="toggleGolonganUI()">
-                                        <option value="Umum" <?= $golongan_val == 'Umum' ? 'selected' : '' ?>>Umum (Reguler)</option>
-                                        <option value="Beasiswa" <?= $golongan_val == 'Beasiswa' ? 'selected' : '' ?>>Beasiswa</option>
-                                    </select>
                                 </div>
                             </div>
                             
@@ -139,11 +136,15 @@ echo $style_css;
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Informasi Kontak & Domisili</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- KUNCI PERBAIKAN: Maxlength NIK diatur 16 -->
-                                    <div class="filter-item"><label class="filter-label">NIK (Nomor Induk Kependudukan)</label><input type="text" name="nik" maxlength="16" value="<?= htmlspecialchars($data['nik'] ?? '') ?>" class="filter-input w-full bg-white" placeholder="16 digit NIK"></div>
+                                    <div class="filter-item">
+                                        <label class="filter-label">NIK (Nomor Induk Kependudukan) <span class="text-red-500">*</span></label>
+                                        <input type="text" id="nik" name="nik" maxlength="16" value="<?= htmlspecialchars($data['nik'] ?? '') ?>" oninput="this.value=this.value.replace(/[^0-9]/g,''); checkNikTanggalLive();" class="filter-input w-full bg-white font-mono" placeholder="16 digit NIK">
+                                        <p id="nikStatusMsg" class="text-xs mt-1 text-gray-500 hidden"></p>
+                                    </div>
                                     
                                     <div class="filter-item">
-                                        <label class="filter-label">Jenis Kelamin</label>
-                                        <select name="jenis_kelamin" class="filter-select w-full bg-white">
+                                        <label class="filter-label">Jenis Kelamin <span class="text-red-500">*</span></label>
+                                        <select id="jenis_kelamin" name="jenis_kelamin" onchange="checkNikTanggalLive();" class="filter-select w-full bg-white">
                                             <option value="L" <?= ($data['jenis_kelamin'] ?? 'L') == 'L' ? 'selected' : '' ?>>Laki-laki (L)</option>
                                             <option value="P" <?= ($data['jenis_kelamin'] ?? '') == 'P' ? 'selected' : '' ?>>Perempuan (P)</option>
                                         </select>
@@ -151,7 +152,7 @@ echo $style_css;
 
                                     <!-- KUNCI PERBAIKAN: Memisahkan Input Tempat & Kalender (Date) -->
                                     <div class="filter-item md:col-span-2">
-                                        <label class="filter-label">Tempat, Tanggal Lahir</label>
+                                        <label class="filter-label">Tempat, Tanggal Lahir <span class="text-red-500">*</span></label>
                                         <div class="flex gap-2">
                                             <?php 
                                                 $ttl_db = $data['tempat_tanggal_lahir'] ?? ''; 
@@ -165,11 +166,15 @@ echo $style_css;
                                                         $tmp_lahir = $ttl_db;
                                                     }
                                                 }
+                                                if ($tgl_lahir !== '' && preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $tgl_lahir, $m)) {
+                                                    $tgl_lahir = $m[3] . '-' . $m[2] . '-' . $m[1];
+                                                }
                                             ?>
-                                            <input type="text" name="tempat_lahir" value="<?= htmlspecialchars($tmp_lahir) ?>" class="filter-input w-1/2 bg-white" placeholder="Tempat (Mis: Denpasar)">
+                                            <input type="text" id="tempat_lahir" name="tempat_lahir" value="<?= htmlspecialchars($tmp_lahir) ?>" class="filter-input w-1/2 bg-white" placeholder="Tempat (Mis: Denpasar)">
                                             <!-- type="date" otomatis memunculkan kalender browser tanpa merusak kemampuan input manual dari keyboard -->
-                                            <input type="date" name="tanggal_lahir" value="<?= htmlspecialchars($tgl_lahir) ?>" class="filter-input w-1/2 bg-white text-gray-600 cursor-pointer">
+                                            <input type="date" id="tanggal_lahir" name="tanggal_lahir" value="<?= htmlspecialchars($tgl_lahir) ?>" onchange="checkNikTanggalLive();" class="filter-input w-1/2 bg-white text-gray-600 cursor-pointer">
                                         </div>
+                                        <p id="tglStatusMsg" class="text-xs mt-1 text-gray-500 hidden"></p>
                                     </div>
 
                                     <div class="filter-item"><label class="filter-label">Asal Sekolah</label><input type="text" name="asal_sekolah" value="<?= htmlspecialchars($data['asal_sekolah'] ?? '') ?>" class="filter-input w-full bg-white" placeholder="Contoh: SMA Negeri 1 Jakarta"></div>
@@ -229,45 +234,208 @@ echo $style_css;
 
                         <div class="flex justify-between pt-2">
                             <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali</button>
-                            <div class="flex gap-2">
-                                <button type="submit" id="btnSimpanLangsung" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all" <?= $golongan_val == 'Beasiswa' ? 'style="display:none;"' : '' ?>>
-                                    Simpan Pendaftaran
-                                </button>
-                                <button type="button" id="btnLanjutKe3" onclick="validateAndGoStep(3)" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all" <?= $golongan_val == 'Umum' ? 'style="display:none;"' : '' ?>>
-                                    Lanjut ke Proses 3: Beasiswa
-                                </button>
-                            </div>
+                            <button type="button" id="btnLanjutKe3" onclick="validateAndGoStep(3)" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2">
+                                <span>Lanjut ke Proses 3: Pengajuan Beasiswa</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
                         </div>
                     </div>
 
                     <div id="section-step-3" class="space-y-6 hidden">
-                        <div class="p-6 border border-amber-300 rounded-xl bg-amber-50/30">
+                        <div class="p-6 border border-amber-300 rounded-xl bg-amber-50/20">
                             <div class="flex items-center justify-between pb-4 border-b border-amber-200 mb-5">
-                                <h3 class="text-sm font-bold uppercase tracking-wider text-amber-900 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span> PROSES 3: SYARAT EKONOMI BEASISWA</h3>
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span> 
+                                    PROSES 3: PENGAJUAN BEASISWA & DATA SOSIAL EKONOMI
+                                </h3>
+                                <span class="text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200">Kriteria Penilaian Ekonomi</span>
+                            </div>
+
+                            <!-- Opsi Jalur Pengajuan Beasiswa -->
+                            <div class="p-4 bg-white border border-amber-200 rounded-xl mb-6 shadow-sm">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-sm">Status Pengajuan Jalur Beasiswa</h4>
+                                        <p class="text-xs text-gray-500 mt-0.5">Pilih apakah calon mahasiswa ini mendaftar melalui jalur seleksi beasiswa atau reguler/umum.</p>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="radio" name="ajukan_beasiswa" value="Beasiswa" <?= $golongan_val !== 'Umum' ? 'checked' : '' ?> onchange="updateGolonganFromRadio(this.value)" class="text-amber-600 focus:ring-amber-500 w-4 h-4">
+                                            <span class="ml-2 text-sm font-bold text-amber-900">Ajukan Beasiswa</span>
+                                        </label>
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="radio" name="ajukan_beasiswa" value="Umum" <?= $golongan_val === 'Umum' ? 'checked' : '' ?> onchange="updateGolonganFromRadio(this.value)" class="text-purple-600 focus:ring-purple-500 w-4 h-4">
+                                            <span class="ml-2 text-sm font-medium text-gray-700">Jalur Reguler (Umum)</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="p-5 bg-white border border-gray-200 rounded-xl space-y-5">
-                                <div class="filter-item">
-                                    <label class="filter-label">Penghasilan Orang Tua (Dasar Analisis Naive Bayes)</label>
-                                    <select name="penghasilan_select" id="penghasilanSelect" class="filter-select w-full" onchange="syncPenghasilanInput()">
-                                        <option value="">-- Pilih Kisaran Penghasilan --</option>
-                                        <option value="< Rp 1.500.000 / bulan" <?= strpos($penghasilan_val, '1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 (Rendah)</option>
-                                        <option value="Rp 1.500.000 - Rp 3.000.000 / bulan" <?= strpos($penghasilan_val, '3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 (Sedang)</option>
-                                        <option value="Rp 3.000.000 - Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 (Menengah)</option>
-                                        <option value="> Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 (Mampu)</option>
-                                    </select>
+                            <!-- Formulir Rincian Beasiswa -->
+                            <div id="containerDetailBeasiswa" class="space-y-6">
+                                <!-- 1. Pekerjaan & Penghasilan Orang Tua (Ayah dan Ibu) -->
+                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                        <span>1. Pekerjaan & Penghasilan Orang Tua (Ayah dan Ibu)</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                                        <!-- Ayah -->
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3">
+                                            <div class="font-bold text-xs uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-purple-600"></span> Data Ayah
+                                            </div>
+                                            <div class="filter-item">
+                                                <label class="filter-label">Pekerjaan Ayah</label>
+                                                <select name="pekerjaan_ayah" class="filter-select w-full bg-white">
+                                                    <option value="">-- Pilih Pekerjaan Ayah --</option>
+                                                    <?php 
+                                                        $jobs_ayah = ['PNS / TNI / Polri', 'Pegawai BUMN / BUMD', 'Karyawan Swasta', 'Wiraswasta / Pedagang', 'Petani / Peternak / Nelayan', 'Buruh Harian Lepas', 'Pensiunan', 'Tidak Bekerja / Meninggal Dunia', 'Lainnya'];
+                                                        foreach ($jobs_ayah as $job):
+                                                    ?>
+                                                        <option value="<?= htmlspecialchars($job) ?>" <?= $pekerjaan_ayah_val === $job ? 'selected' : '' ?>><?= htmlspecialchars($job) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="filter-item">
+                                                <label class="filter-label">Gaji / Penghasilan Ayah per Bulan</label>
+                                                <select name="penghasilan_ayah" id="penghasilanAyah" onchange="autoCalculatePenghasilan()" class="filter-select w-full bg-white">
+                                                    <option value="">-- Pilih Penghasilan Ayah --</option>
+                                                    <option value="Tidak Ada" <?= $penghasilan_ayah_val === 'Tidak Ada' ? 'selected' : '' ?>>Tidak Ada / Rp 0</option>
+                                                    <option value="< Rp 1.500.000" <?= strpos($penghasilan_ayah_val, '< Rp 1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan</option>
+                                                    <option value="Rp 1.500.000 - Rp 3.000.000" <?= strpos($penghasilan_ayah_val, '1.500.000 - Rp 3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan</option>
+                                                    <option value="Rp 3.000.000 - Rp 5.000.000" <?= strpos($penghasilan_ayah_val, '3.000.000 - Rp 5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan</option>
+                                                    <option value="> Rp 5.000.000" <?= strpos($penghasilan_ayah_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ibu -->
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3">
+                                            <div class="font-bold text-xs uppercase tracking-wider text-pink-900 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-pink-500"></span> Data Ibu
+                                            </div>
+                                            <div class="filter-item">
+                                                <label class="filter-label">Pekerjaan Ibu</label>
+                                                <select name="pekerjaan_ibu" class="filter-select w-full bg-white">
+                                                    <option value="">-- Pilih Pekerjaan Ibu --</option>
+                                                    <?php 
+                                                        $jobs_ibu = ['Ibu Rumah Tangga (IRT)', 'PNS / TNI / Polri', 'Pegawai BUMN / BUMD', 'Karyawan Swasta', 'Wiraswasta / Pedagang', 'Petani / Peternak / Nelayan', 'Buruh Harian Lepas', 'Pensiunan', 'Tidak Bekerja / Meninggal Dunia', 'Lainnya'];
+                                                        foreach ($jobs_ibu as $job):
+                                                    ?>
+                                                        <option value="<?= htmlspecialchars($job) ?>" <?= $pekerjaan_ibu_val === $job ? 'selected' : '' ?>><?= htmlspecialchars($job) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="filter-item">
+                                                <label class="filter-label">Gaji / Penghasilan Ibu per Bulan</label>
+                                                <select name="penghasilan_ibu" id="penghasilanIbu" onchange="autoCalculatePenghasilan()" class="filter-select w-full bg-white">
+                                                    <option value="">-- Pilih Penghasilan Ibu --</option>
+                                                    <option value="Tidak Ada" <?= $penghasilan_ibu_val === 'Tidak Ada' ? 'selected' : '' ?>>Tidak Ada / Rp 0 (IRT)</option>
+                                                    <option value="< Rp 1.500.000" <?= strpos($penghasilan_ibu_val, '< Rp 1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan</option>
+                                                    <option value="Rp 1.500.000 - Rp 3.000.000" <?= strpos($penghasilan_ibu_val, '1.500.000 - Rp 3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan</option>
+                                                    <option value="Rp 3.000.000 - Rp 5.000.000" <?= strpos($penghasilan_ibu_val, '3.000.000 - Rp 5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan</option>
+                                                    <option value="> Rp 5.000.000" <?= strpos($penghasilan_ibu_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total Penghasilan Gabungan (Untuk Naive Bayes) -->
+                                    <div class="filter-item">
+                                        <label class="filter-label">Total Penghasilan Orang Tua Gabungan (Dasar Analisis Klasifikasi Naive Bayes)</label>
+                                        <select name="penghasilan_orangtua" id="penghasilanSelect" class="filter-select w-full bg-white">
+                                            <option value="">-- Pilih Kisaran Total Penghasilan Gabungan --</option>
+                                            <option value="< Rp 1.500.000 / bulan" <?= strpos($penghasilan_val, '1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan (Rendah / Prioritas Beasiswa)</option>
+                                            <option value="Rp 1.500.000 - Rp 3.000.000 / bulan" <?= strpos($penghasilan_val, '3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan (Sedang / Layak)</option>
+                                            <option value="Rp 3.000.000 - Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan (Menengah)</option>
+                                            <option value="> Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan (Mampu)</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="filter-item">
-                                    <label class="filter-label">Catatan Tambahan (Bila Ada)</label>
-                                    <input type="text" name="penghasilan_orangtua" id="penghasilanInput" value="<?= htmlspecialchars($penghasilan_val) ?>" class="filter-input w-full" placeholder="Detail Pekerjaan...">
+
+                                <!-- 2. Aset Keluarga -->
+                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                        <span>2. Aset Keluarga (Kendaraan & Bangunan Tempat Tinggal)</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="filter-item">
+                                            <label class="filter-label">Kepemilikan Kendaraan</label>
+                                            <select name="aset_kendaraan" class="filter-select w-full bg-white">
+                                                <option value="">-- Pilih Kepemilikan Kendaraan --</option>
+                                                <?php 
+                                                    $kendaraan_opts = [
+                                                        'Tidak Memiliki Kendaraan',
+                                                        '1 Unit Sepeda Motor',
+                                                        '2 Unit Sepeda Motor atau Lebih',
+                                                        '1 Unit Mobil',
+                                                        'Mobil dan Sepeda Motor'
+                                                    ];
+                                                    foreach ($kendaraan_opts as $k_opt):
+                                                ?>
+                                                    <option value="<?= htmlspecialchars($k_opt) ?>" <?= $aset_kendaraan_val === $k_opt ? 'selected' : '' ?>><?= htmlspecialchars($k_opt) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="filter-item">
+                                            <label class="filter-label">Bangunan Tempat Tinggal</label>
+                                            <select name="aset_bangunan" class="filter-select w-full bg-white">
+                                                <option value="">-- Pilih Status Tempat Tinggal --</option>
+                                                <?php 
+                                                    $bangunan_opts = [
+                                                        'Menumpang / Tinggal Bersama Kerabat',
+                                                        'Sewa / Kontrak Rumah',
+                                                        'Rumah Sendiri (Sederhana / Non-Permanen)',
+                                                        'Rumah Sendiri (Permanen)',
+                                                        'Rumah Sendiri (Mewah)'
+                                                    ];
+                                                    foreach ($bangunan_opts as $b_opt):
+                                                ?>
+                                                    <option value="<?= htmlspecialchars($b_opt) ?>" <?= $aset_bangunan_val === $b_opt ? 'selected' : '' ?>><?= htmlspecialchars($b_opt) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Uang Makan Satu Keluarga per Hari -->
+                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span>3. Uang Makan Satu Keluarga per Hari</span>
+                                    </div>
+
+                                    <div class="filter-item">
+                                        <label class="filter-label">Estimasi Pengeluaran Uang Makan Keluarga (Per Hari)</label>
+                                        <select name="uang_makan_harian" class="filter-select w-full bg-white">
+                                            <option value="">-- Pilih Estimasi Uang Makan Harian --</option>
+                                            <?php 
+                                                $makan_opts = [
+                                                    '< Rp 30.000 / hari',
+                                                    'Rp 30.000 - Rp 50.000 / hari',
+                                                    'Rp 50.000 - Rp 100.000 / hari',
+                                                    '> Rp 100.000 / hari'
+                                                ];
+                                                foreach ($makan_opts as $m_opt):
+                                            ?>
+                                                <option value="<?= htmlspecialchars($m_opt) ?>" <?= $uang_makan_val === $m_opt ? 'selected' : '' ?>><?= htmlspecialchars($m_opt) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flex justify-between pt-2">
-                            <button type="button" onclick="goToStep(2)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali</button>
-                            <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all">
-                                Simpan Pendaftaran Beasiswa
+                            <button type="button" onclick="goToStep(2)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali ke Proses 2</button>
+                            <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <span>Simpan Pendaftaran Mahasiswa</span>
                             </button>
                         </div>
                     </div>
@@ -276,23 +444,34 @@ echo $style_css;
         </div>
         
         <script>
-            function toggleGolonganUI() {
-                const gol = document.getElementById('golonganSelect').value;
-                const trackerLine3 = document.getElementById('tracker-line-3');
-                const trackerNode3 = document.getElementById('tracker-node-3');
-                const btnSimpan = document.getElementById('btnSimpanLangsung');
-                const btnLanjut3 = document.getElementById('btnLanjutKe3');
+            function updateGolonganFromRadio(val) {
+                const golInput = document.getElementById('golonganInput');
+                if (golInput) golInput.value = val;
 
-                if (gol === 'Umum') {
-                    trackerLine3.style.display = 'none';
-                    trackerNode3.style.display = 'none';
-                    btnSimpan.style.display = 'block';
-                    btnLanjut3.style.display = 'none';
-                } else {
-                    trackerLine3.style.display = 'block';
-                    trackerNode3.style.display = 'flex';
-                    btnSimpan.style.display = 'none';
-                    btnLanjut3.style.display = 'block';
+                const detailContainer = document.getElementById('containerDetailBeasiswa');
+                if (detailContainer) {
+                    if (val === 'Umum') {
+                        detailContainer.classList.add('opacity-40');
+                    } else {
+                        detailContainer.classList.remove('opacity-40');
+                    }
+                }
+            }
+
+            function autoCalculatePenghasilan() {
+                const ayah = document.getElementById('penghasilanAyah')?.value || '';
+                const ibu = document.getElementById('penghasilanIbu')?.value || '';
+                const totalSelect = document.getElementById('penghasilanSelect');
+                if (!totalSelect) return;
+
+                if (ayah.includes('> Rp 5.000.000') || ibu.includes('> Rp 5.000.000')) {
+                    totalSelect.value = '> Rp 5.000.000 / bulan';
+                } else if (ayah.includes('3.000.000') || ibu.includes('3.000.000')) {
+                    totalSelect.value = 'Rp 3.000.000 - Rp 5.000.000 / bulan';
+                } else if (ayah.includes('1.500.000') || ibu.includes('1.500.000')) {
+                    totalSelect.value = 'Rp 1.500.000 - Rp 3.000.000 / bulan';
+                } else if (ayah.includes('< Rp 1.500.000') || ibu.includes('< Rp 1.500.000')) {
+                    totalSelect.value = '< Rp 1.500.000 / bulan';
                 }
             }
 
@@ -307,6 +486,8 @@ echo $style_css;
                 }
             }
 
+<<<<<<< HEAD
+=======
             function modalTambahProdiMhs() {
                 Swal.fire({
                     title: 'Tambah Program Studi Baru',
@@ -382,6 +563,7 @@ echo $style_css;
                 input.value = select.value;
             }
 
+>>>>>>> 1f64e65181a53b16a4e5858520c3a46086be9ff0
             function goToStep(step) {
                 document.getElementById('section-step-1').classList.add('hidden');
                 document.getElementById('section-step-2').classList.add('hidden');
@@ -397,8 +579,10 @@ echo $style_css;
                     if(!node) continue;
 
                     if (i === step) {
-                        node.className = "w-12 h-12 rounded-full border-4 border-purple-600 bg-purple-600 text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300";
-                        label.className = "text-xs font-bold text-purple-700 mt-2 text-center transition-colors";
+                        const activeBg = (i === 3) ? 'bg-amber-500 border-amber-500' : 'bg-purple-600 border-purple-600';
+                        const textCol = (i === 3) ? 'text-amber-700' : 'text-purple-700';
+                        node.className = `w-12 h-12 rounded-full border-4 ${activeBg} text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300`;
+                        label.className = `text-xs font-bold ${textCol} mt-2 text-center transition-colors`;
                     } else if (i < step) {
                         node.className = "w-12 h-12 rounded-full border-4 border-purple-600 bg-white text-purple-600 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300";
                         label.className = "text-xs font-bold text-purple-700 mt-2 text-center transition-colors";
@@ -413,17 +597,284 @@ echo $style_css;
                 }
             }
 
+            // Validasi Kesesuaian NIK dan Tanggal Lahir (Aturan Dukcapil)
+            function validateNikTanggalLahir(nik, tglLahir, jk) {
+                if (!nik || nik.length !== 16 || !/^\d{16}$/.test(nik)) {
+                    return {
+                        valid: false,
+                        title: 'Format NIK Tidak Sesuai',
+                        message: 'NIK harus berjumlah tepat 16 digit angka.'
+                    };
+                }
+
+                if (!tglLahir) {
+                    return {
+                        valid: false,
+                        title: 'Tanggal Lahir Belum Dipilih',
+                        message: 'Silakan pilih tanggal lahir calon mahasiswa terlebih dahulu.'
+                    };
+                }
+
+                const parts = tglLahir.split('-');
+                if (parts.length !== 3) {
+                    return {
+                        valid: false,
+                        title: 'Format Tanggal Tidak Valid',
+                        message: 'Format tanggal lahir tidak valid.'
+                    };
+                }
+
+                const inputYear = parseInt(parts[0], 10);
+                const inputMonth = parseInt(parts[1], 10);
+                const inputDay = parseInt(parts[2], 10);
+
+                const inputYY = String(inputYear).slice(-2);
+                const inputMM = String(inputMonth).padStart(2, '0');
+                const inputDD = String(inputDay).padStart(2, '0');
+
+                // Ekstrak 6 digit tanggal lahir dari NIK (index 6 s.d 11)
+                const nikDayRaw = parseInt(nik.substr(6, 2), 10);
+                const nikMM = nik.substr(8, 2);
+                const nikMonth = parseInt(nikMM, 10);
+                const nikYY = nik.substr(10, 2);
+
+                let nikGender = '';
+                let nikRealDay = 0;
+
+                // Ketentuan: Penambahan angka 40 untuk perempuan pada digit tanggal
+                if (nikDayRaw > 40 && nikDayRaw <= 71) {
+                    nikGender = 'P';
+                    nikRealDay = nikDayRaw - 40;
+                } else if (nikDayRaw >= 1 && nikDayRaw <= 31) {
+                    nikGender = 'L';
+                    nikRealDay = nikDayRaw;
+                } else {
+                    return {
+                        valid: false,
+                        title: 'Tanggal Lahir NIK Tidak Valid',
+                        message: `Digit tanggal pada NIK (${nik.substr(6, 2)}) tidak valid. Sesuai aturan Dukcapil, digit tanggal bernilai 01-31 (Laki-laki) atau 41-71 (Perempuan).`
+                    };
+                }
+
+                if (nikMonth < 1 || nikMonth > 12) {
+                    return {
+                        valid: false,
+                        title: 'Bulan Lahir NIK Tidak Valid',
+                        message: `Digit bulan pada NIK (${nikMM}) tidak valid (harus 01-12).`
+                    };
+                }
+
+                const isDayMatch = (inputDay === nikRealDay);
+                const isMonthMatch = (inputMM === nikMM);
+                const isYearMatch = (inputYY === nikYY);
+                const isGenderMatch = (jk === nikGender);
+
+                if (!isDayMatch || !isMonthMatch || !isYearMatch || !isGenderMatch) {
+                    const nikDayFormatted = String(nikRealDay).padStart(2, '0');
+                    const nikTglFormatted = `${nikDayFormatted}-${nikMM}-${nikYY}`;
+                    const inputTglFormatted = `${inputDD}-${inputMM}-${inputYear}`;
+                    const nikGenderText = (nikGender === 'P') ? 'Perempuan (Tanggal + 40)' : 'Laki-laki';
+                    const inputGenderText = (jk === 'P') ? 'Perempuan' : 'Laki-laki';
+
+                    let perbedaan = [];
+                    if (!isGenderMatch) {
+                        perbedaan.push(`• <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
+                    }
+                    if (!isDayMatch) {
+                        perbedaan.push(`• <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
+                    }
+                    if (!isMonthMatch) {
+                        perbedaan.push(`• <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
+                    }
+                    if (!isYearMatch) {
+                        perbedaan.push(`• <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
+                    }
+
+                    return {
+                        valid: false,
+                        title: 'Tanggal Lahir Tidak Sesuai NIK!',
+                        message: 'Tanggal lahir yang dimasukkan tidak sesuai dengan NIK.',
+                        perbedaan: perbedaan.join('<br>'),
+                        nikTgl: nikTglFormatted,
+                        nikGender: nikGenderText,
+                        inputTgl: inputTglFormatted,
+                        inputGender: inputGenderText
+                    };
+                }
+
+                return {
+                    valid: true,
+                    nikRealDay,
+                    nikMonth,
+                    nikYY,
+                    nikGender
+                };
+            }
+
+            function checkNikTanggalLive() {
+                const nik = document.getElementById('nik')?.value.trim() || '';
+                const tgl = document.getElementById('tanggal_lahir')?.value || '';
+                const jk = document.getElementById('jenis_kelamin')?.value || 'L';
+                const nikMsg = document.getElementById('nikStatusMsg');
+                const tglMsg = document.getElementById('tglStatusMsg');
+
+                if (!nikMsg || !tglMsg) return;
+
+                if (nik.length === 0) {
+                    nikMsg.classList.add('hidden');
+                    tglMsg.classList.add('hidden');
+                    return;
+                }
+
+                if (nik.length < 16) {
+                    nikMsg.className = "text-xs mt-1 text-gray-400";
+                    nikMsg.textContent = `${nik.length}/16 digit NIK`;
+                    nikMsg.classList.remove('hidden');
+                    tglMsg.classList.add('hidden');
+                    return;
+                }
+
+                if (nik.length === 16 && tgl) {
+                    const res = validateNikTanggalLahir(nik, tgl, jk);
+                    if (res.valid) {
+                        nikMsg.className = "text-xs mt-1 text-emerald-600 font-semibold flex items-center gap-1";
+                        nikMsg.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Sesuai dengan tanggal lahir & jenis kelamin';
+                        nikMsg.classList.remove('hidden');
+
+                        tglMsg.className = "text-xs mt-1 text-emerald-600 font-semibold";
+                        tglMsg.textContent = "✓ Sesuai dengan 6 digit tanggal NIK";
+                        tglMsg.classList.remove('hidden');
+                    } else {
+                        nikMsg.className = "text-xs mt-1 text-rose-500 font-semibold flex items-center gap-1";
+                        nikMsg.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> ' + (res.title || 'Tidak sesuai dengan NIK');
+                        nikMsg.classList.remove('hidden');
+
+                        tglMsg.className = "text-xs mt-1 text-rose-500 font-semibold";
+                        tglMsg.textContent = "⚠ Tanggal lahir belum sesuai dengan 6 digit NIK";
+                        tglMsg.classList.remove('hidden');
+                    }
+                } else if (nik.length === 16) {
+                    nikMsg.className = "text-xs mt-1 text-purple-600 font-medium";
+                    nikMsg.textContent = "✓ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
+                    nikMsg.classList.remove('hidden');
+                    tglMsg.classList.add('hidden');
+                }
+            }
+
             function validateAndGoStep(targetStep) {
                 if (targetStep === 2) {
-                    const nim = document.getElementById('nim').value;
-                    const nama = document.getElementById('nama').value;
-                    if(!nim || !nama) {
-                        Swal.fire({icon: 'warning', title: 'Data Belum Lengkap', text: 'NIM dan Nama Lengkap wajib diisi!'});
+                    const nama = document.getElementById('nama') ? document.getElementById('nama').value.trim() : '';
+                    const nik = document.getElementById('nik') ? document.getElementById('nik').value.trim() : '';
+                    const tglLahir = document.getElementById('tanggal_lahir') ? document.getElementById('tanggal_lahir').value : '';
+                    const jk = document.getElementById('jenis_kelamin') ? document.getElementById('jenis_kelamin').value : 'L';
+
+                    if (!nama) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Data Belum Lengkap',
+                            text: 'Nama Lengkap calon mahasiswa wajib diisi!',
+                            confirmButtonColor: '#9333ea'
+                        });
+                        return;
+                    }
+
+                    if (!nik) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Data Belum Lengkap',
+                            text: 'NIK (Nomor Induk Kependudukan) wajib diisi!',
+                            confirmButtonColor: '#9333ea'
+                        });
+                        return;
+                    }
+
+                    if (nik.length !== 16 || !/^\d{16}$/.test(nik)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Format NIK Tidak Valid',
+                            text: 'NIK harus berjumlah tepat 16 digit angka!',
+                            confirmButtonColor: '#9333ea'
+                        });
+                        return;
+                    }
+
+                    if (!tglLahir) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Data Belum Lengkap',
+                            text: 'Tanggal lahir calon mahasiswa wajib dipilih!',
+                            confirmButtonColor: '#9333ea'
+                        });
+                        return;
+                    }
+
+                    // Eksekusi Validasi Kesesuaian NIK & Tanggal Lahir
+                    const nikCheck = validateNikTanggalLahir(nik, tglLahir, jk);
+                    if (!nikCheck.valid) {
+                        let htmlMsg = `
+                            <div class="text-sm text-gray-700 text-left mb-3">
+                                Tanggal lahir yang Anda masukkan <strong class="text-rose-600">tidak sesuai</strong> dengan NIK (Nomor Induk Kependudukan).
+                            </div>
+                        `;
+
+                        if (nikCheck.perbedaan) {
+                            htmlMsg += `
+                                <div class="p-3 text-xs text-left bg-red-50 text-red-800 border border-red-200 rounded-lg mb-3 leading-relaxed">
+                                    <div class="font-bold text-red-900 border-b border-red-200 pb-1 mb-1.5">Rincian Perbedaan:</div>
+                                    ${nikCheck.perbedaan}
+                                </div>
+                            `;
+                        }
+
+                        htmlMsg += `
+                            <div class="p-3 text-xs text-left bg-gray-50 text-gray-600 border border-gray-200 rounded-lg space-y-1">
+                                <div class="font-bold text-gray-800 border-b border-gray-200 pb-1 mb-1">Ketentuan Format 16 Digit NIK:</div>
+                                <div>• <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
+                                <div>• <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
+                                <div>• <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
+                            </div>
+                        `;
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Tanggal Lahir Tidak Sesuai!',
+                            html: htmlMsg,
+                            confirmButtonColor: '#9333ea',
+                            confirmButtonText: 'Periksa Kembali'
+                        });
                         return;
                     }
                 }
                 goToStep(targetStep);
             }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                checkNikTanggalLive();
+
+                const formPendaftaran = document.getElementById('formPendaftaran');
+                if (formPendaftaran) {
+                    formPendaftaran.addEventListener('submit', function(e) {
+                        const nik = document.getElementById('nik') ? document.getElementById('nik').value.trim() : '';
+                        const tglLahir = document.getElementById('tanggal_lahir') ? document.getElementById('tanggal_lahir').value : '';
+                        const jk = document.getElementById('jenis_kelamin') ? document.getElementById('jenis_kelamin').value : 'L';
+
+                        if (nik && tglLahir) {
+                            const nikCheck = validateNikTanggalLahir(nik, tglLahir, jk);
+                            if (!nikCheck.valid) {
+                                e.preventDefault();
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Tanggal Lahir Tidak Sesuai!',
+                                    text: 'Tanggal lahir tidak sesuai dengan NIK. Silakan periksa kembali sebelum menyimpan data.',
+                                    confirmButtonColor: '#9333ea'
+                                });
+                                goToStep(1);
+                                return false;
+                            }
+                        }
+                    });
+                }
+            });
         </script>
 
     <?php else: ?>

@@ -95,7 +95,7 @@ echo $style_css;
                 </div>
                 <div class="filter-item">
                     <span class="filter-label">Metode Penilaian</span>
-                    <span class="text-sm font-semibold text-gray-700 mt-1">Weight Product (WP)</span>
+                    <span class="text-sm font-semibold text-gray-700 mt-1">Naive Bayes</span>
                 </div>
             </div>
         </div>
@@ -109,9 +109,6 @@ echo $style_css;
                     <span class="table-badge-counter"><?= count($dataKriteria) ?> Data</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="text-xs text-gray-500 italic hidden sm:block">
-                        * Klik baris atau tombol sub kriteria untuk melihat seluruh rincian nilai
-                    </div>
                     <a href="kriteria.php?page=kriteria&aksi=tambah" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium text-xs rounded-lg shadow-sm transition-all flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

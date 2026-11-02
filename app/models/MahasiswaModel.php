@@ -125,7 +125,9 @@ class MahasiswaModel {
             SELECT 
                 m.id_mahasiswa, m.nim, m.nama_mahasiswa, m.status, m.golongan,
                 d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, d.asal_sekolah,
-                d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua
+                d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua,
+                d.pekerjaan_ayah, d.pekerjaan_ibu, d.penghasilan_ayah, d.penghasilan_ibu,
+                d.aset_kendaraan, d.aset_bangunan, d.uang_makan_harian
             FROM mahasiswa m
             LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
             ORDER BY m.id_mahasiswa ASC
@@ -169,6 +171,13 @@ class MahasiswaModel {
                         'email'                => $row['email'] ?: '-',
                         'alamat'               => $row['alamat'] ?: '-',
                         'penghasilan'          => $row['penghasilan_orangtua'] ?: '-',
+                        'pekerjaan_ayah'       => $row['pekerjaan_ayah'] ?? '-',
+                        'pekerjaan_ibu'        => $row['pekerjaan_ibu'] ?? '-',
+                        'penghasilan_ayah'     => $row['penghasilan_ayah'] ?? '-',
+                        'penghasilan_ibu'      => $row['penghasilan_ibu'] ?? '-',
+                        'aset_kendaraan'       => $row['aset_kendaraan'] ?? '-',
+                        'aset_bangunan'        => $row['aset_bangunan'] ?? '-',
+                        'uang_makan_harian'    => $row['uang_makan_harian'] ?? '-',
                         'jalur'                => $golongan
                     ]
                 ];
@@ -180,7 +189,7 @@ class MahasiswaModel {
     public function getMahasiswaById($id) {
         $id = (int)$id;
         $q = mysqli_query($this->db, "
-            SELECT m.*, d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, d.asal_sekolah, d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua 
+            SELECT m.*, d.* 
             FROM mahasiswa m 
             LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa 
             WHERE m.id_mahasiswa='$id'
@@ -223,15 +232,90 @@ class MahasiswaModel {
         return $result;
     }
 
-    public function createMahasiswa($mhsData, $detailData, $nilaiKriteria = []) {
-        $nim = mysqli_real_escape_string($this->db, $mhsData['nim']);
+    // Validasi Kesesuaian NIK dan Tanggal Lahir (Aturan Dukcapil)
+    public function validateNikWithTtl($nik, $ttl, $jk) {
+        $nik = trim($nik ?? '');
+        if ($nik === '' || $nik === '-') {
+            return ['valid' => true];
+        }
         
-        // Validasi Duplikat NIM
-        $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'");
-        if (mysqli_num_rows($cekNIM) > 0) {
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['error_msg'] = "Gagal! NIM '$nim' sudah terdaftar.";
-            return false;
+        if (strlen($nik) !== 16 || !ctype_digit($nik)) {
+            return ['valid' => false, 'message' => 'NIK harus berjumlah 16 digit angka.'];
+        }
+
+        $parts = explode(', ', $ttl);
+        $tgl = count($parts) == 2 ? trim($parts[1]) : trim($ttl);
+
+        if (empty($tgl) || $tgl === '-') {
+            return ['valid' => false, 'message' => 'Tanggal lahir tidak boleh kosong untuk verifikasi NIK.'];
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $tgl, $m)) {
+            $inputYear = (int)$m[1];
+            $inputMonth = (int)$m[2];
+            $inputDay = (int)$m[3];
+        } elseif (preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $tgl, $m)) {
+            $inputDay = (int)$m[1];
+            $inputMonth = (int)$m[2];
+            $inputYear = (int)$m[3];
+        } else {
+            return ['valid' => false, 'message' => 'Format tanggal lahir tidak valid.'];
+        }
+
+        $inputYY = substr((string)$inputYear, -2);
+        $inputMM = str_pad($inputMonth, 2, '0', STR_PAD_LEFT);
+
+        $nikDayRaw = (int)substr($nik, 6, 2);
+        $nikMM = substr($nik, 8, 2);
+        $nikYY = substr($nik, 10, 2);
+
+        $nikGender = '';
+        $nikRealDay = 0;
+        if ($nikDayRaw > 40 && $nikDayRaw <= 71) {
+            $nikGender = 'P';
+            $nikRealDay = $nikDayRaw - 40;
+        } elseif ($nikDayRaw >= 1 && $nikDayRaw <= 31) {
+            $nikGender = 'L';
+            $nikRealDay = $nikDayRaw;
+        } else {
+            return ['valid' => false, 'message' => 'Digit tanggal pada NIK (digit ke-7 & 8) tidak valid sesuai ketentuan Dukcapil.'];
+        }
+
+        if ($inputDay !== $nikRealDay || $inputMM !== $nikMM || $inputYY !== $nikYY || $jk !== $nikGender) {
+            return [
+                'valid' => false,
+                'message' => 'Tanggal lahir atau jenis kelamin tidak sesuai dengan informasi 6 digit pada NIK (Nomor Induk Kependudukan).'
+            ];
+        }
+
+        return ['valid' => true];
+    }
+
+    public function createMahasiswa($mhsData, $detailData, $nilaiKriteria = []) {
+        $rawNim = trim($mhsData['nim'] ?? '');
+        if (empty($rawNim)) {
+            $prefix = date('y') . '010';
+            $qLast = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim LIKE '{$prefix}%' ORDER BY nim DESC LIMIT 1");
+            if ($qLast && $rowLast = mysqli_fetch_assoc($qLast)) {
+                $lastNum = (int)substr($rowLast['nim'], strlen($prefix));
+                $nextNum = str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+                $nim = $prefix . $nextNum;
+            } else {
+                $nim = $prefix . '0001';
+            }
+            while (mysqli_num_rows(mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'")) > 0) {
+                $lastNum = (int)substr($nim, strlen($prefix));
+                $nim = $prefix . str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
+            }
+        } else {
+            $nim = mysqli_real_escape_string($this->db, $rawNim);
+            // Validasi Duplikat NIM
+            $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'");
+            if (mysqli_num_rows($cekNIM) > 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['error_msg'] = "Gagal! NIM '$nim' sudah terdaftar.";
+                return false;
+            }
         }
 
         // Validasi Duplikat NIK
@@ -245,6 +329,19 @@ class MahasiswaModel {
             }
         }
 
+        $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
+        $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
+
+        // Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK
+        if ($nik !== '-' && $nik !== '') {
+            $checkNik = $this->validateNikWithTtl($nik, $ttl, $jk);
+            if (!$checkNik['valid']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['error_msg'] = "Gagal! " . $checkNik['message'];
+                return false;
+            }
+        }
+
         $nama = mysqli_real_escape_string($this->db, $mhsData['nama']);
         $golongan = mysqli_real_escape_string($this->db, $mhsData['golongan'] ?? 'Umum');
         $status = 'Menunggu';
@@ -254,8 +351,6 @@ class MahasiswaModel {
 
         $id_new = mysqli_insert_id($this->db);
 
-        $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
-        $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
         $sekolah = !empty($detailData['asal_sekolah']) ? mysqli_real_escape_string($this->db, $detailData['asal_sekolah']) : '-';
         $jurusan = !empty($detailData['jurusan_asal']) ? mysqli_real_escape_string($this->db, $detailData['jurusan_asal']) : '-';
         $hp = !empty($detailData['no_hp']) ? mysqli_real_escape_string($this->db, $detailData['no_hp']) : '-';
@@ -263,9 +358,27 @@ class MahasiswaModel {
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
         $penghasilan = !empty($detailData['penghasilan_orangtua']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_orangtua']) : '-';
 
+        $pekerjaan_ayah = !empty($detailData['pekerjaan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ayah']) : '-';
+        $pekerjaan_ibu = !empty($detailData['pekerjaan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ibu']) : '-';
+        $penghasilan_ayah = !empty($detailData['penghasilan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ayah']) : '-';
+        $penghasilan_ibu = !empty($detailData['penghasilan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ibu']) : '-';
+        $aset_kendaraan = !empty($detailData['aset_kendaraan']) ? mysqli_real_escape_string($this->db, $detailData['aset_kendaraan']) : '-';
+        $aset_bangunan = !empty($detailData['aset_bangunan']) ? mysqli_real_escape_string($this->db, $detailData['aset_bangunan']) : '-';
+        $uang_makan = !empty($detailData['uang_makan_harian']) ? mysqli_real_escape_string($this->db, $detailData['uang_makan_harian']) : '-';
+
         $qDetail = mysqli_query($this->db, "
-            INSERT INTO data_mahasiswa (id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, no_hp, email, alamat, penghasilan_orangtua, golongan)
-            VALUES ('$id_new', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', '$hp', '$email', '$alamat', '$penghasilan', '$golongan')
+            INSERT INTO data_mahasiswa (
+                id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, 
+                no_hp, email, alamat, penghasilan_orangtua, golongan,
+                pekerjaan_ayah, pekerjaan_ibu, penghasilan_ayah, penghasilan_ibu, 
+                aset_kendaraan, aset_bangunan, uang_makan_harian
+            )
+            VALUES (
+                '$id_new', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
+                '$hp', '$email', '$alamat', '$penghasilan', '$golongan',
+                '$pekerjaan_ayah', '$pekerjaan_ibu', '$penghasilan_ayah', '$penghasilan_ibu',
+                '$aset_kendaraan', '$aset_bangunan', '$uang_makan'
+            )
         ");
 
         if (!$qDetail) {
@@ -281,14 +394,20 @@ class MahasiswaModel {
 
     public function updateMahasiswa($id, $mhsData, $detailData, $nilaiKriteria = []) {
         $id = (int)$id;
-        $nim = mysqli_real_escape_string($this->db, $mhsData['nim']);
-        
-        // Validasi Duplikat NIM saat Edit (Abaikan ID diri sendiri)
-        $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim' AND id_mahasiswa != '$id'");
-        if (mysqli_num_rows($cekNIM) > 0) {
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['error_msg'] = "Gagal Edit! NIM '$nim' sudah dipakai oleh pendaftar lain.";
-            return false;
+        $rawNim = trim($mhsData['nim'] ?? '');
+        if (!empty($rawNim)) {
+            $nim = mysqli_real_escape_string($this->db, $rawNim);
+            // Validasi Duplikat NIM saat Edit (Abaikan ID diri sendiri)
+            $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim' AND id_mahasiswa != '$id'");
+            if (mysqli_num_rows($cekNIM) > 0) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['error_msg'] = "Gagal Edit! NIM '$nim' sudah dipakai oleh pendaftar lain.";
+                return false;
+            }
+        } else {
+            $qOld = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE id_mahasiswa = '$id'");
+            $rowOld = mysqli_fetch_assoc($qOld);
+            $nim = $rowOld['nim'] ?? '';
         }
 
         // Validasi Duplikat NIK saat Edit
@@ -302,14 +421,25 @@ class MahasiswaModel {
             }
         }
 
+        $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
+        $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
+
+        // Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK saat Edit
+        if ($nik !== '-' && $nik !== '') {
+            $checkNik = $this->validateNikWithTtl($nik, $ttl, $jk);
+            if (!$checkNik['valid']) {
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $_SESSION['error_msg'] = "Gagal Edit! " . $checkNik['message'];
+                return false;
+            }
+        }
+
         $nama = mysqli_real_escape_string($this->db, $mhsData['nama']);
         $golongan = mysqli_real_escape_string($this->db, $mhsData['golongan'] ?? 'Umum');
         $status = mysqli_real_escape_string($this->db, $mhsData['status'] ?? 'Menunggu');
 
         mysqli_query($this->db, "UPDATE mahasiswa SET nim='$nim', nama_mahasiswa='$nama', status='$status', golongan='$golongan' WHERE id_mahasiswa='$id'");
 
-        $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
-        $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
         $sekolah = !empty($detailData['asal_sekolah']) ? mysqli_real_escape_string($this->db, $detailData['asal_sekolah']) : '-';
         $jurusan = !empty($detailData['jurusan_asal']) ? mysqli_real_escape_string($this->db, $detailData['jurusan_asal']) : '-';
         $hp = !empty($detailData['no_hp']) ? mysqli_real_escape_string($this->db, $detailData['no_hp']) : '-';
@@ -317,19 +447,41 @@ class MahasiswaModel {
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
         $penghasilan = !empty($detailData['penghasilan_orangtua']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_orangtua']) : '-';
 
+        $pekerjaan_ayah = !empty($detailData['pekerjaan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ayah']) : '-';
+        $pekerjaan_ibu = !empty($detailData['pekerjaan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ibu']) : '-';
+        $penghasilan_ayah = !empty($detailData['penghasilan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ayah']) : '-';
+        $penghasilan_ibu = !empty($detailData['penghasilan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ibu']) : '-';
+        $aset_kendaraan = !empty($detailData['aset_kendaraan']) ? mysqli_real_escape_string($this->db, $detailData['aset_kendaraan']) : '-';
+        $aset_bangunan = !empty($detailData['aset_bangunan']) ? mysqli_real_escape_string($this->db, $detailData['aset_bangunan']) : '-';
+        $uang_makan = !empty($detailData['uang_makan_harian']) ? mysqli_real_escape_string($this->db, $detailData['uang_makan_harian']) : '-';
+
         $cek = mysqli_query($this->db, "SELECT id_data FROM data_mahasiswa WHERE id_mahasiswa='$id'");
         if ($cek && mysqli_num_rows($cek) > 0) {
             mysqli_query($this->db, "
                 UPDATE data_mahasiswa SET 
                     nik='$nik', jenis_kelamin='$jk', tempat_tanggal_lahir='$ttl', 
                     asal_sekolah='$sekolah', jurusan_asal='$jurusan', no_hp='$hp', email='$email', alamat='$alamat',
-                    penghasilan_orangtua='$penghasilan', golongan='$golongan'
+                    penghasilan_orangtua='$penghasilan', golongan='$golongan',
+                    pekerjaan_ayah='$pekerjaan_ayah', pekerjaan_ibu='$pekerjaan_ibu',
+                    penghasilan_ayah='$penghasilan_ayah', penghasilan_ibu='$penghasilan_ibu',
+                    aset_kendaraan='$aset_kendaraan', aset_bangunan='$aset_bangunan',
+                    uang_makan_harian='$uang_makan'
                 WHERE id_mahasiswa='$id'
             ");
         } else {
             mysqli_query($this->db, "
-                INSERT INTO data_mahasiswa (id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, no_hp, email, alamat, penghasilan_orangtua, golongan)
-                VALUES ('$id', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', '$hp', '$email', '$alamat', '$penghasilan', '$golongan')
+                INSERT INTO data_mahasiswa (
+                    id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, 
+                    no_hp, email, alamat, penghasilan_orangtua, golongan,
+                    pekerjaan_ayah, pekerjaan_ibu, penghasilan_ayah, penghasilan_ibu, 
+                    aset_kendaraan, aset_bangunan, uang_makan_harian
+                )
+                VALUES (
+                    '$id', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
+                    '$hp', '$email', '$alamat', '$penghasilan', '$golongan',
+                    '$pekerjaan_ayah', '$pekerjaan_ibu', '$penghasilan_ayah', '$penghasilan_ibu',
+                    '$aset_kendaraan', '$aset_bangunan', '$uang_makan'
+                )
             ");
         }
 
