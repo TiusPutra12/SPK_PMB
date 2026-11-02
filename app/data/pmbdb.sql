@@ -43,6 +43,57 @@ CREATE TABLE `data_mahasiswa`  (
 -- ----------------------------
 -- Records of data_mahasiswa
 -- ----------------------------
+DELIMITER $$
+CREATE PROCEDURE InsertDummyMahasiswa()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE v_id_mhs INT;
+    
+    WHILE i <= 100 DO
+        -- 1. Insert ke tabel mahasiswa utama
+        INSERT INTO mahasiswa (nim, nama_mahasiswa, status, golongan) 
+        VALUES (
+            CONCAT('22010', LPAD(i, 3, '0')), 
+            CONCAT('Mahasiswa Dummy ', i), 
+            IF(i % 5 = 0, 'Diterima', 'Ditolak'), 
+            IF(i % 3 = 0, 'Beasiswa', 'Umum')
+        );
+        
+        SET v_id_mhs = LAST_INSERT_ID();
+        
+        -- 2. Insert ke tabel data_mahasiswa (Relasi detail)
+        INSERT INTO data_mahasiswa (id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, no_hp, email, alamat, penghasilan_orangtua, golongan)
+        VALUES (
+            v_id_mhs, 
+            CONCAT('3201', LPAD(i, 12, '0')), 
+            IF(i % 2 = 0, 'L', 'P'), 
+            'Bandung, 01-01-2004', 
+            'SMA Negeri 1 Dummy', 
+            IF(i % 2 = 0, 'Teknik Informatika', 'Sistem Informasi'), 
+            CONCAT('08123456', LPAD(i, 4, '0')), 
+            CONCAT('dummy', i, '@mail.com'), 
+            CONCAT('Jl. Dummy Data No. ', i), 
+            IF(i % 3 = 0, '< Rp 1.500.000 / bulan', 'Rp 3.000.000 - Rp 5.000.000 / bulan'), 
+            IF(i % 3 = 0, 'Beasiswa', 'Umum')
+        );
+        
+        -- 3. Insert ke tabel nilai (Otomatis memilih sub_kriteria acak/terpola)
+        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 1, IF(i % 3 = 0, 3, 2), NULL);
+        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 2, IF(i % 3 = 0, 6, 5), NULL);
+        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 3, IF(i % 3 = 0, 9, 8), NULL);
+        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 4, IF(i % 3 = 0, 12, 11), NULL);
+        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 5, IF(i % 3 = 0, 15, 14), NULL);
+        
+        SET i = i + 1;
+    END WHILE;
+END$$
+DELIMITER ;
+
+-- Eksekusi Procedure
+CALL InsertDummyMahasiswa();
+
+-- Hapus Procedure setelah selesai digunakan
+DROP PROCEDURE InsertDummyMahasiswa;
 
 -- ----------------------------
 -- Table structure for kriteria
@@ -112,13 +163,22 @@ CREATE TABLE `nilai`  (
 -- ----------------------------
 -- Table structure for prodi
 -- ----------------------------
-DROP TABLE IF EXISTS `prodi`;
-CREATE TABLE `prodi`  (
-  `id_prodi` int NOT NULL,
-  `nama_prodi` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
-  PRIMARY KEY (`id_prodi`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+DROP TABLE IF EXISTS prodi;
 
+CREATE TABLE prodi (
+    id_prodi INT AUTO_INCREMENT PRIMARY KEY,
+    nama_prodi VARCHAR(100) NOT NULL
+);
+
+INSERT INTO prodi (nama_prodi) VALUES 
+('S1 Teknik Informatika'), 
+('S1 Sistem Informasi'), 
+('S1 Manajemen'), 
+('S1 Akuntansi'), 
+('S1 Pariwisata'), 
+('S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
+('S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
+('S1 Pendidikan Bahasa Inggris');
 -- ----------------------------
 -- Records of prodi
 -- ----------------------------

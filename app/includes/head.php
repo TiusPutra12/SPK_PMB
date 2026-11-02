@@ -13,7 +13,7 @@ $pages = [
     'kriteria'  => "DATA KRITERIA",
     'mahasiswa' => "DATA MAHASISWA",
     'alternatif' => "DATA ALTERNATIF",
-    'analisa'   => "ANALISA WP"
+    'analisis'   => "ANALISA NAIVE BAYES",
 ];
 $page_title = $pages[$page] ?? "SPK PENERIMAAN SISWA BARU";
 

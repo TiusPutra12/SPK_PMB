@@ -13,3 +13,37 @@ Tius : (01/11/2026)
         4. Update Form Tambah Mahasiswa
         5. Hapus Data Json
         6. Update struktur syntax
+
+Ananta : (02/11/2026)
+        log :
+        1. Update struktur Sidebar (Tema ungu, collapse feature, nested dropdown)
+        2. Update Modul Data Mahasiswa (Pemisahan Camaba & Mahasiswa Resmi, Live Search, Paginasi)
+        3. Update Database (Tabel prodi, update ENUM status, training data uji)
+        4. Update Form Tambah Mahasiswa (Validasi duplikat NIM/NIK, kalender TTL, dropdown prodi)
+        5. Integrasi Modul Klasifikasi Naive Bayes (Otomatisasi status Menunggu -> Diterima/Ditolak)
+        6. Perbaikan bug Notice Session & perbaikan layout tabel
+
+        detail :
+        1. Modul Antarmuka & Sidebar (UI/UX)
+                a. Pembaruan Tema: Menyelaraskan seluruh warna sistem menjadi identitas Ungu (Purple Palette) yang dikombinasikan dengan latar belakang gray-900 yang elegan.
+                b. Integrasi Logo: Memasukkan image.png pada bagian atas sidebar bersanding dengan teks "SPK.PMB".
+                c. Fitur Collapse Sidebar: Menambahkan tombol interaktif untuk melipat (collapse) dan membuka sidebar agar ruang kerja tabel menjadi lebih luas dan responsif.
+                d. Restrukturisasi Menu (Nested Dropdown): Memasukkan menu "Data Mahasiswa" ke dalam "Master Data" dengan dropdown bertingkat (nested) berisi "Data Camaba" dan "Mahasiswa Resmi". 
+                Memperbaiki bug event bubbling saat menu diklik.
+        2. Modul Data Mahasiswa & Camaba
+                a. Pemisahan Tampilan: Membedakan rute halaman "Data Camaba" (menampilkan semua pendaftar dengan filter status) dan "Mahasiswa Resmi" (eksklusif hanya menampilkan status 'Diterima' tanpa tombol tambah data).
+                b. Pemisahan Tampilan: Membedakan rute halaman "Data Camaba" (menampilkan semua pendaftar dengan filter status) dan "Mahasiswa Resmi" (eksklusif hanya menampilkan status 'Diterima' tanpa tombol tambah data).
+                c. Paginasi & Limit Dinamis: Mengembalikan desain kotak form asli dan memindahkan opsi dropdown "Batasi Data" ke bagian header tabel. Menambahkan sistem Live Search dan paginasi data.
+        3. Modul Form Pendaftaran (Validasi Ketat)
+                a. Validasi Karakter: NIM dibatasi maksimal 12 digit dan NIK 16 digit.
+                b. Pencegahan Duplikat: Menambahkan proteksi validasi di MahasiswaModel.php agar tidak ada NIM atau NIK yang sama di dalam database (baik saat Tambah maupun Edit).
+                c. Otomatisasi Status: Menghilangkan pilihan "Status Kelulusan" manual. Pendaftar baru secara mutlak akan berstatus "Menunggu" sebelum dianalisis sistem.
+                d. Integrasi Kalender & Prodi: Memisahkan input Tempat Lahir (teks) dan Tanggal Lahir (Date Picker Browser). Mengubah isian Program Studi Tujuan dari input teks menjadi dropdown yang memanggil data asli dari tabel.
+        4. Modul Analisis Naive Bayes (Inti SPK)
+                a. Pembuatan Arsitektur MVC: Membangun AnalisisModel.php, AnalisisController.php, dan analisis.php dari nol sebagai pengganti konsep WP yang keliru.
+                b. Algoritma Probabilitas: Menulis rumusan perhitungan Prior Probability, Conditional Probability, dan Laplace Smoothing murni untuk mengklasifikasi status pendaftar yang "Menunggu".
+                c. Perbaikan Pembacaan Ciri: Algoritma dioptimalkan untuk membaca id_sub (Opsi Pilihan Kriteria) alih-alih angka desimal mentah.
+        5. Pembaruan Database (SQL)
+                a. Pembuatan tabel prodi berisi 8 daftar jurusan Universitas Triatma Mulya.
+                b. Pembaruan struktur ENUM pada kolom status tabel mahasiswa menjadi ('Menunggu', 'Diterima', 'Ditolak').
+                c. Pembaruan struktur ENUM pada kolom status tabel mahasiswa menjadi ('Menunggu', 'Diterima', 'Ditolak').
