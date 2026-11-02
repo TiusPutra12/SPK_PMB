@@ -8,18 +8,82 @@ class MahasiswaModel {
     public function __construct() {
         global $koneksi;
         $this->db = $koneksi;
+        $this->ensureProgramStudiTable();
     }
 
-    // FITUR BARU: Menarik Data Program Studi sekaligus Auto-Generate Tabel jika belum ada
+    public function ensureProgramStudiTable() {
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
+        if (!$check || mysqli_num_rows($check) == 0) {
+            @mysqli_query($this->db, "
+                CREATE TABLE IF NOT EXISTS `program_studi` (
+                    `id_program` INT AUTO_INCREMENT PRIMARY KEY,
+                    `nama_program` VARCHAR(100) NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            ");
+
+            $checkOld = @mysqli_query($this->db, "SHOW TABLES LIKE 'prodi'");
+            if ($checkOld && mysqli_num_rows($checkOld) > 0) {
+                @mysqli_query($this->db, "INSERT INTO `program_studi` (`nama_program`) SELECT `nama_prodi` FROM `prodi`");
+            } else {
+                @mysqli_query($this->db, "
+                    INSERT INTO `program_studi` (`id_program`, `nama_program`) VALUES 
+                    (1, 'S1 Teknik Informatika'), 
+                    (2, 'S1 Sistem Informasi'), 
+                    (3, 'S1 Manajemen'), 
+                    (4, 'S1 Akuntansi'), 
+                    (5, 'S1 Pariwisata'), 
+                    (6, 'S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
+                    (7, 'S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
+                    (8, 'S1 Pendidikan Bahasa Inggris')
+                ");
+            }
+        }
+    }
+
+    // FITUR: Menarik Data Program Studi dari tabel program_studi (kolom id_program, nama_program)
     public function getListProdi() {
-        $q = mysqli_query($this->db, "SELECT nama_prodi FROM prodi ORDER BY id_prodi ASC");
+        $this->ensureProgramStudiTable();
+        $q = mysqli_query($this->db, "SELECT id_program, nama_program FROM program_studi ORDER BY id_program ASC");
         $res = [];
-        if ($q) {
+        if ($q && mysqli_num_rows($q) > 0) {
             while ($r = mysqli_fetch_assoc($q)) {
-                $res[] = $r['nama_prodi'];
+                $res[] = $r['nama_program'];
+            }
+        } else {
+            $qOld = @mysqli_query($this->db, "SELECT nama_prodi FROM prodi ORDER BY id_prodi ASC");
+            if ($qOld) {
+                while ($r = mysqli_fetch_assoc($qOld)) {
+                    $res[] = $r['nama_prodi'];
+                }
             }
         }
         return $res;
+    }
+
+    public function addProgramStudi($nama_program) {
+        $this->ensureProgramStudiTable();
+        $nama_program = trim($nama_program);
+        if (empty($nama_program)) {
+            return ['success' => false, 'message' => 'Nama program studi tidak boleh kosong!'];
+        }
+        $nama_clean = mysqli_real_escape_string($this->db, $nama_program);
+
+        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$nama_clean')");
+        if ($check && mysqli_num_rows($check) > 0) {
+            return ['success' => false, 'message' => 'Program studi "' . $nama_program . '" sudah terdaftar!'];
+        }
+
+        $ins = mysqli_query($this->db, "INSERT INTO program_studi (nama_program) VALUES ('$nama_clean')");
+        if ($ins) {
+            $new_id = mysqli_insert_id($this->db);
+            return [
+                'success' => true,
+                'message' => 'Program studi "' . $nama_program . '" berhasil ditambahkan!',
+                'id_program' => $new_id,
+                'nama_program' => $nama_program
+            ];
+        }
+        return ['success' => false, 'message' => 'Gagal menambahkan program studi: ' . mysqli_error($this->db)];
     }
 
     private function getDatasetByStatus($status_array) {

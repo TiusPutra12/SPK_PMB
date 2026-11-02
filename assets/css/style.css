@@ -1,4 +1,28 @@
 /* app/assets/css/style.css */
+
+/* =========================================
+   DASHBOARD GRID LAYOUT
+   ========================================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Chart container height */
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+
 *::-webkit-scrollbar,
 ::-webkit-scrollbar {
   width: 0px !important;

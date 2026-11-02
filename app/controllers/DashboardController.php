@@ -9,6 +9,46 @@ class DashboardController {
         $this->model = new DashboardModel($koneksi);
     }
 
+    public function handleRequest() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
+            $aksi = $_POST['aksi'];
+
+            if ($aksi === 'tambah_prodi') {
+                $nama = trim($_POST['nama_program'] ?? '');
+                $res = $this->model->addProgramStudi($nama);
+            } elseif ($aksi === 'edit_prodi') {
+                $id   = (int)($_POST['id_program'] ?? 0);
+                $nama = trim($_POST['nama_program'] ?? '');
+                $res = $this->model->updateProgramStudi($id, $nama);
+            } elseif ($aksi === 'hapus_prodi') {
+                $id = (int)($_POST['id_program'] ?? 0);
+                $res = $this->model->deleteProgramStudi($id);
+            } else {
+                $res = ['success' => false, 'message' => 'Aksi tidak dikenal.'];
+            }
+
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode($res);
+                exit;
+            }
+
+            if ($res['success']) {
+                $_SESSION['success_msg'] = $res['message'];
+            } else {
+                $_SESSION['error_msg'] = $res['message'];
+            }
+            header("Location: dashboard.php?page=beranda");
+            exit;
+        }
+    }
+
     public function getDashboardData() {
         $kriteria_list = $this->model->getKriteria();
         $prodi_list    = $this->model->getProdiList();
@@ -103,4 +143,3 @@ class DashboardController {
     }
 }
 ?>
-

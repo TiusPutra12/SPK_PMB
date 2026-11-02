@@ -86,13 +86,11 @@ $isAnalisis = in_array($page, ['analisis']);
                         </button>
                         <div id="menuMhsSub" class="sidebar-menu-transition <?= $isMahasiswaData ? 'sidebar-dropdown-open' : 'sidebar-dropdown-closed' ?>">
                             <div class="flex flex-col space-y-1 pl-4 py-1 border-l-2 border-purple-500/20 ml-4 mt-1">
-                                <a href="mahasiswa.php?page=mahasiswa&jenis=camaba" class="block px-4 py-1.5 text-xs rounded-lg transition-all <?= ($page == 'mahasiswa' && $jenis == 'camaba') ? 'text-purple-400 font-semibold' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Mahasiswa Baru</a>
-                                <a href="mahasiswa.php?page=mahasiswa&jenis=mahasiswa" class="block px-4 py-1.5 text-xs rounded-lg transition-all <?= ($page == 'mahasiswa' && $jenis == 'mahasiswa') ? 'text-purple-400 font-semibold' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Mahasiswa Resmi</a>
+                                <a href="mahasiswa.php?page=mahasiswa&jenis=mahasiswa" class="block px-4 py-1.5 text-xs rounded-lg transition-all <?= ($page == 'mahasiswa' && $jenis == 'mahasiswa') ? 'text-purple-400 font-semibold' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Mahasiswa</a>
                             </div>
                         </div>
                     </div>
-
-                    <a href="#" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Set Alternatif</a>
+                    <a href="mahasiswa.php?page=mahasiswa&jenis=camaba" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Set Alternatif</a>
                 </div>
             </div>
         </div>

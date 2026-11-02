@@ -307,6 +307,75 @@ echo $style_css;
                 }
             }
 
+            function modalTambahProdiMhs() {
+                Swal.fire({
+                    title: 'Tambah Program Studi Baru',
+                    text: 'Program studi baru akan disimpan ke database dan langsung aktif di pilihan form:',
+                    input: 'text',
+                    inputPlaceholder: 'Contoh: S1 Desain Komunikasi Visual',
+                    showCancelButton: true,
+                    confirmButtonText: 'Simpan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#9333ea',
+                    cancelButtonColor: '#6b7280',
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) {
+                            return 'Nama program studi tidak boleh kosong!';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData();
+                        formData.append('aksi', 'tambah_prodi');
+                        formData.append('nama_program', result.value.trim());
+
+                        fetch('mahasiswa.php?page=mahasiswa&aksi=<?= htmlspecialchars($aksi) ?>', {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                const select = document.getElementById('selectProdiTujuan');
+                                if (select) {
+                                    const opt = document.createElement('option');
+                                    opt.value = data.nama_program;
+                                    opt.textContent = data.nama_program;
+                                    opt.selected = true;
+                                    select.appendChild(opt);
+                                }
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: data.message,
+                                    confirmButtonColor: '#9333ea',
+                                    timer: 2000
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: data.message,
+                                    confirmButtonColor: '#9333ea'
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan Sistem',
+                                text: 'Gagal menghubungi server.',
+                                confirmButtonColor: '#9333ea'
+                            });
+                        });
+                    }
+                });
+            }
+
             function syncPenghasilanInput() {
                 const select = document.getElementById('penghasilanSelect');
                 const input = document.getElementById('penghasilanInput');

@@ -23,6 +23,26 @@ class MahasiswaController {
 
         $aksi = isset($_GET['aksi']) ? $_GET['aksi'] : '';
 
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'tambah_prodi') {
+            $nama = trim($_POST['nama_program'] ?? '');
+            $res = $this->mahasiswaModel->addProgramStudi($nama);
+
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode($res);
+                exit;
+            }
+
+            if ($res['success']) {
+                $_SESSION['success_msg'] = $res['message'];
+            } else {
+                $_SESSION['error_msg'] = $res['message'];
+            }
+            $redirect_aksi = isset($_GET['aksi']) ? $_GET['aksi'] : 'tambah';
+            header("Location: mahasiswa.php?page=mahasiswa&aksi=" . urlencode($redirect_aksi));
+            exit;
+        }
+
         if (isset($_POST['simpan_tambah']) || isset($_POST['simpan_edit'])) {
             // Logika Menggabungkan Input Tempat (Text) dan Tanggal Lahir (Calendar)
             $tmp_lahir = trim($_POST['tempat_lahir'] ?? '');
