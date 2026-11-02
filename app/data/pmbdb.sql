@@ -161,27 +161,28 @@ CREATE TABLE `nilai`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for prodi
 -- ----------------------------
-DROP TABLE IF EXISTS prodi;
+-- Table structure for program_studi
+-- ----------------------------
+DROP TABLE IF EXISTS `program_studi`;
+CREATE TABLE `program_studi`  (
+  `id_program` int NOT NULL AUTO_INCREMENT,
+  `nama_program` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`id_program`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
-CREATE TABLE prodi (
-    id_prodi INT AUTO_INCREMENT PRIMARY KEY,
-    nama_prodi VARCHAR(100) NOT NULL
-);
-
-INSERT INTO prodi (nama_prodi) VALUES 
-('S1 Teknik Informatika'), 
-('S1 Sistem Informasi'), 
-('S1 Manajemen'), 
-('S1 Akuntansi'), 
-('S1 Pariwisata'), 
-('S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
-('S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
-('S1 Pendidikan Bahasa Inggris');
 -- ----------------------------
--- Records of prodi
+-- Records of program_studi
 -- ----------------------------
+INSERT INTO `program_studi` (`id_program`, `nama_program`) VALUES 
+(1, 'S1 Teknik Informatika'), 
+(2, 'S1 Sistem Informasi'), 
+(3, 'S1 Manajemen'), 
+(4, 'S1 Akuntansi'), 
+(5, 'S1 Pariwisata'), 
+(6, 'S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
+(7, 'S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
+(8, 'S1 Pendidikan Bahasa Inggris');
 
 -- ----------------------------
 -- Table structure for sub_kriteria
