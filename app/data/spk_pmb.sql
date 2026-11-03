@@ -1,4 +1,4 @@
-   /*
+/*
  Navicat Premium Dump SQL
 
  Source Server         : my_connect
@@ -11,11 +11,25 @@
  Target Server Version : 80030 (8.0.30)
  File Encoding         : 65001
 
- Date: 01/11/2026 03:03:47
+ Date: 03/11/2026 16:56:19
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for beasiswa
+-- ----------------------------
+DROP TABLE IF EXISTS `beasiswa`;
+CREATE TABLE `beasiswa`  (
+  `id_beasiswa` int NOT NULL,
+  `jalur_beasiswa` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  PRIMARY KEY (`id_beasiswa` DESC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of beasiswa
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for data_mahasiswa
@@ -33,67 +47,24 @@ CREATE TABLE `data_mahasiswa`  (
   `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `alamat` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `penghasilan_orangtua` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `pekerjaan_ayah` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `pekerjaan_ibu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `penghasilan_ayah` int NULL DEFAULT NULL,
+  `penghasilan_ibu` int NULL DEFAULT NULL,
+  `aset_kendaraan` int NULL DEFAULT NULL,
+  `aset_bangunan` int NULL DEFAULT NULL,
+  `uang_makan_harian` int NULL DEFAULT NULL,
+  `status` int NULL DEFAULT NULL,
   `golongan` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id_data`) USING BTREE,
   UNIQUE INDEX `nik`(`nik` ASC) USING BTREE,
   INDEX `fk_data_mahasiswa`(`id_mahasiswa` ASC) USING BTREE,
   CONSTRAINT `fk_data_mahasiswa` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of data_mahasiswa
 -- ----------------------------
-DELIMITER $$
-CREATE PROCEDURE InsertDummyMahasiswa()
-BEGIN
-    DECLARE i INT DEFAULT 1;
-    DECLARE v_id_mhs INT;
-    
-    WHILE i <= 100 DO
-        -- 1. Insert ke tabel mahasiswa utama
-        INSERT INTO mahasiswa (nim, nama_mahasiswa, status, golongan) 
-        VALUES (
-            CONCAT('22010', LPAD(i, 3, '0')), 
-            CONCAT('Mahasiswa Dummy ', i), 
-            IF(i % 5 = 0, 'Diterima', 'Ditolak'), 
-            IF(i % 3 = 0, 'Beasiswa', 'Umum')
-        );
-        
-        SET v_id_mhs = LAST_INSERT_ID();
-        
-        -- 2. Insert ke tabel data_mahasiswa (Relasi detail)
-        INSERT INTO data_mahasiswa (id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, no_hp, email, alamat, penghasilan_orangtua, golongan)
-        VALUES (
-            v_id_mhs, 
-            CONCAT('3201', LPAD(i, 12, '0')), 
-            IF(i % 2 = 0, 'L', 'P'), 
-            'Bandung, 01-01-2004', 
-            'SMA Negeri 1 Dummy', 
-            IF(i % 2 = 0, 'Teknik Informatika', 'Sistem Informasi'), 
-            CONCAT('08123456', LPAD(i, 4, '0')), 
-            CONCAT('dummy', i, '@mail.com'), 
-            CONCAT('Jl. Dummy Data No. ', i), 
-            IF(i % 3 = 0, '< Rp 1.500.000 / bulan', 'Rp 3.000.000 - Rp 5.000.000 / bulan'), 
-            IF(i % 3 = 0, 'Beasiswa', 'Umum')
-        );
-        
-        -- 3. Insert ke tabel nilai (Otomatis memilih sub_kriteria acak/terpola)
-        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 1, IF(i % 3 = 0, 3, 2), NULL);
-        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 2, IF(i % 3 = 0, 6, 5), NULL);
-        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 3, IF(i % 3 = 0, 9, 8), NULL);
-        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 4, IF(i % 3 = 0, 12, 11), NULL);
-        INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES (v_id_mhs, 5, IF(i % 3 = 0, 15, 14), NULL);
-        
-        SET i = i + 1;
-    END WHILE;
-END$$
-DELIMITER ;
-
--- Eksekusi Procedure
-CALL InsertDummyMahasiswa();
-
--- Hapus Procedure setelah selesai digunakan
-DROP PROCEDURE InsertDummyMahasiswa;
 
 -- ----------------------------
 -- Table structure for kriteria
@@ -124,18 +95,19 @@ CREATE TABLE `mahasiswa`  (
   `id_mahasiswa` int NOT NULL AUTO_INCREMENT,
   `nim` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `nama_mahasiswa` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `status` enum('Diterima','Ditolak') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Ditolak',
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `golongan` enum('Umum','Beasiswa') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Umum',
   PRIMARY KEY (`id_mahasiswa`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mahasiswa
 -- ----------------------------
-INSERT INTO `mahasiswa` VALUES (1, '220101001', 'Ahmad Rizky', 'Ditolak', 'Umum');
-INSERT INTO `mahasiswa` VALUES (2, '220101002', 'Budi Santoso', 'Ditolak', 'Umum');
-INSERT INTO `mahasiswa` VALUES (3, '210101003', 'Citra Kirana', 'Ditolak', 'Umum');
-INSERT INTO `mahasiswa` VALUES (4, '2355201020', 'Yoga Prakusya', 'Ditolak', 'Umum');
+INSERT INTO `mahasiswa` VALUES (5, '260100001', 'Data Dummy', 'Menunggu', 'Beasiswa');
+INSERT INTO `mahasiswa` VALUES (6, '260100002', 'Data Dummy', 'Menunggu', 'Beasiswa');
+INSERT INTO `mahasiswa` VALUES (7, '260100003', 'Data Dummy', 'Menunggu', 'Beasiswa');
+INSERT INTO `mahasiswa` VALUES (8, '260100004', 'Data Dummy', 'Menunggu', 'Umum');
+INSERT INTO `mahasiswa` VALUES (9, '260100005', 'Data Dummy', 'Menunggu', 'Umum');
 
 -- ----------------------------
 -- Table structure for nilai
@@ -154,13 +126,27 @@ CREATE TABLE `nilai`  (
   CONSTRAINT `fk_nilai_kriteria` FOREIGN KEY (`id_kriteria`) REFERENCES `kriteria` (`id_kriteria`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_nilai_mahasiswa` FOREIGN KEY (`id_mahasiswa`) REFERENCES `mahasiswa` (`id_mahasiswa`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_nilai_sub` FOREIGN KEY (`id_sub`) REFERENCES `sub_kriteria` (`id_sub`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of nilai
 -- ----------------------------
 
 -- ----------------------------
+-- Table structure for prodi
+-- ----------------------------
+DROP TABLE IF EXISTS `prodi`;
+CREATE TABLE `prodi`  (
+  `id_prodi` int NOT NULL,
+  `nama_prodi` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  PRIMARY KEY (`id_prodi`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of prodi
+-- ----------------------------
+INSERT INTO `prodi` VALUES (1, 'Teknik Informatika');
+
 -- ----------------------------
 -- Table structure for program_studi
 -- ----------------------------
@@ -169,20 +155,12 @@ CREATE TABLE `program_studi`  (
   `id_program` int NOT NULL AUTO_INCREMENT,
   `nama_program` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id_program`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of program_studi
 -- ----------------------------
-INSERT INTO `program_studi` (`id_program`, `nama_program`) VALUES 
-(1, 'S1 Teknik Informatika'), 
-(2, 'S1 Sistem Informasi'), 
-(3, 'S1 Manajemen'), 
-(4, 'S1 Akuntansi'), 
-(5, 'S1 Pariwisata'), 
-(6, 'S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
-(7, 'S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
-(8, 'S1 Pendidikan Bahasa Inggris');
+INSERT INTO `program_studi` VALUES (1, 'Teknik Informatika');
 
 -- ----------------------------
 -- Table structure for sub_kriteria
