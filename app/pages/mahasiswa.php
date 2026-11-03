@@ -73,6 +73,32 @@ echo $style_css;
             $aset_kendaraan_val = $data['aset_kendaraan'] ?? '';
             $aset_bangunan_val = $data['aset_bangunan'] ?? '';
             $uang_makan_val = $data['uang_makan_harian'] ?? '';
+
+            // Menentukan kriteria mana yang diinput manual (C1: Nilai Rapor, C4: Nilai TKA, C5: Skor Bahasa Inggris)
+            $manual_kriteria_ids = [];
+            $dropdown_kriteria_ids = [];
+            $kriteria_meta = [];
+            $cCounter = 1;
+            foreach ($kriteria_db as $idK => $krit) {
+                $isManual = ($cCounter === 1 || $cCounter === 4 || $cCounter === 5)
+                    || in_array($idK, [1, 4, 5])
+                    || stripos($krit['nama_kriteria'], 'Rapor') !== false
+                    || stripos($krit['nama_kriteria'], 'TKA') !== false
+                    || stripos($krit['nama_kriteria'], 'Inggris') !== false;
+
+                if ($isManual) {
+                    $manual_kriteria_ids[] = (int)$idK;
+                } else {
+                    $dropdown_kriteria_ids[] = (int)$idK;
+                }
+
+                $kriteria_meta[$idK] = [
+                    'cNo' => $cCounter,
+                    'nama' => $krit['nama_kriteria'],
+                    'isManual' => $isManual
+                ];
+                $cCounter++;
+            }
         ?>
 
         <div class="flex justify-between items-center mb-6">
@@ -211,24 +237,127 @@ echo $style_css;
                                 foreach ($kriteria_db as $idK => $krit): 
                                     $curSubId = $editNilai[$idK]['id_sub'] ?? 0;
                                     $curNilai = $editNilai[$idK]['nilai'] ?? '';
+                                    $isManual = in_array($idK, $manual_kriteria_ids);
                                 ?>
-                                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                        <h4 class="font-bold text-gray-800 text-sm mb-3"><?= htmlspecialchars($krit['nama_kriteria']) ?> (C<?= $cNo ?>)</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-purple-300 transition-all">
+                                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                                <span class="w-2.5 h-2.5 rounded-full <?= $isManual ? 'bg-purple-600' : 'bg-blue-500' ?>"></span>
+                                                <span><?= htmlspecialchars($krit['nama_kriteria']) ?> (C<?= $cNo ?>)</span>
+                                            </h4>
+                                            <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold <?= $isManual ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-blue-50 text-blue-700 border border-blue-200' ?>">
+                                                <?= $isManual ? 'Input Nilai Manual' : 'Pilihan Kategori' ?>
+                                            </span>
+                                        </div>
+
+                                        <?php if ($isManual): ?>
                                             <div class="filter-item">
-                                                <select name="kriteria_sub[<?= $idK ?>]" id="sub_select_<?= $idK ?>" class="filter-select w-full" onchange="updateSubScore(<?= $idK ?>)">
-                                                    <option value="">-- Pilih Nilai --</option>
+                                                <label class="filter-label flex items-center justify-between">
+                                                    <span>Nilai <?= htmlspecialchars($krit['nama_kriteria']) ?> <span class="text-red-500">*</span></span>
+                                                    <span class="text-[11px] text-gray-400 font-normal">
+                                                        <?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? 'Skor Tes / TOEFL (contoh: 380, 450)' : 'Skala: 0 - 100' ?>
+                                                    </span>
+                                                </label>
+                                                <input type="number" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       <?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? '' : 'max="100"' ?> 
+                                                       name="kriteria_nilai[<?= $idK ?>]" 
+                                                       id="sub_nilai_<?= $idK ?>" 
+                                                       value="<?= htmlspecialchars((string)$curNilai) ?>" 
+                                                       class="filter-input w-full bg-white font-mono font-bold text-purple-900 border-purple-300 focus:ring-purple-500 text-base" 
+                                                       placeholder="<?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? 'Masukkan skor bahasa Inggris (misal: 450)' : 'Masukkan nilai ' . htmlspecialchars(strtolower($krit['nama_kriteria'])) . ' (misal: 85.50)' ?>" 
+                                                       oninput="autoMatchSubKriteria(<?= $idK ?>)">
+                                                
+                                                <!-- Dropdown Sub Kriteria disembunyikan (nilai otomatis dihitung dan disimpan) -->
+                                                <select name="kriteria_sub[<?= $idK ?>]" 
+                                                        id="sub_select_<?= $idK ?>" 
+                                                        class="hidden">
+                                                    <option value="">-- Kategori Otomatis Sesuai Nilai --</option>
                                                     <?php foreach ($krit['subs'] as $sub): ?>
-                                                        <option value="<?= $sub['id_sub'] ?>" data-score="<?= $sub['nilai'] ?>" <?= ($curSubId == $sub['id_sub']) ? 'selected' : '' ?>><?= htmlspecialchars($sub['nama_sub']) ?></option>
+                                                        <option value="<?= $sub['id_sub'] ?>" 
+                                                                data-score="<?= $sub['nilai'] ?>" 
+                                                                data-nama="<?= htmlspecialchars($sub['nama_sub']) ?>" 
+                                                                <?= ($curSubId == $sub['id_sub']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($sub['nama_sub']) ?> (Skor SPK: <?= $sub['nilai'] ?>)
+                                                        </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+                                        <?php else: ?>
                                             <div class="filter-item">
-                                                <input type="number" step="0.01" name="kriteria_nilai[<?= $idK ?>]" id="sub_nilai_<?= $idK ?>" value="<?= htmlspecialchars((string)$curNilai) ?>" class="filter-input w-full bg-gray-100 font-mono font-semibold" readonly placeholder="Skor Nilai (Otomatis)">
+                                                <label class="filter-label flex items-center justify-between">
+                                                    <span>Tingkat Prestasi <?= htmlspecialchars($krit['nama_kriteria']) ?> <span class="text-red-500">*</span></span>
+                                                    <span class="text-[11px] text-gray-400 font-normal">Pilih opsi capaian</span>
+                                                </label>
+                                                <select name="kriteria_sub[<?= $idK ?>]" id="sub_select_<?= $idK ?>" class="filter-select w-full bg-white text-gray-800 font-medium" onchange="updateSubScore(<?= $idK ?>)">
+                                                    <option value="">-- Pilih Tingkat Prestasi --</option>
+                                                    <?php foreach ($krit['subs'] as $sub): ?>
+                                                        <option value="<?= $sub['id_sub'] ?>" data-score="<?= $sub['nilai'] ?>" data-nama="<?= htmlspecialchars($sub['nama_sub']) ?>" <?= ($curSubId == $sub['id_sub']) ? 'selected' : '' ?>><?= htmlspecialchars($sub['nama_sub']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <!-- Skor Nilai Otomatis disembunyikan (nilai otomatis tersimpan ke sistem) -->
+                                                <input type="hidden" name="kriteria_nilai[<?= $idK ?>]" id="sub_nilai_<?= $idK ?>" value="<?= htmlspecialchars((string)$curNilai) ?>">
                                             </div>
-                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 <?php $cNo++; endforeach; ?>
+                            </div>
+
+                            <!-- HASIL GABUNGAN SEMUA SKOR NILAI PENILAIAN -->
+                            <div class="p-6 bg-gradient-to-r from-purple-50/70 via-white to-purple-50/70 border-2 border-purple-300 rounded-2xl shadow-sm mt-6">
+                                <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-purple-200 flex-wrap gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-900 text-sm tracking-wider uppercase">Hasil Gabungan Skor Nilai Penilaian</h4>
+                                            <p class="text-xs text-gray-500">Hasil gabungan dan kalkulasi otomatis dari seluruh kriteria penilaian mahasiswa.</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge_status_gabungan" class="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                        Menunggu Input Nilai
+                                    </span>
+                                </div>
+
+                                <!-- Field Menampilkan Hasil Gabungan Semua Skor Nilai -->
+                                <div class="mb-5">
+                                    <label class="filter-label text-xs font-bold text-purple-900 mb-1.5 flex items-center justify-between">
+                                        <span>Hasil Gabungan Skor Nilai (Otomatis)</span>
+                                        <span class="text-[11px] text-purple-600 font-semibold" id="text_terisi_counter">0/<?= count($kriteria_db) ?> Kriteria Terisi</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="field_hasil_gabungan" name="field_hasil_gabungan" readonly 
+                                               class="filter-input w-full bg-white font-mono font-bold text-base sm:text-lg text-purple-900 border-2 border-purple-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none" 
+                                               placeholder="Hasil gabungan skor nilai akan otomatis dihitung setelah nilai diinput...">
+                                    </div>
+                                </div>
+
+                                <!-- Rincian Akumulasi & Statistik -->
+                                <div id="breakdown_gabungan_container" class="space-y-4 pt-3 border-t border-purple-100 hidden">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
+                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Total Akumulasi Skor</span>
+                                            <span id="stat_total_skor" class="text-xl font-black text-purple-800 font-mono">-</span>
+                                        </div>
+                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
+                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Nilai Akhir Terbobot (SPK)</span>
+                                            <span id="stat_skor_terbobot" class="text-xl font-black text-emerald-600 font-mono">-</span>
+                                        </div>
+                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
+                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Rata-rata Skor Kriteria</span>
+                                            <span id="stat_rata_skor" class="text-xl font-black text-blue-600 font-mono">-</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-2">Rincian Skor Tiap Kriteria:</span>
+                                        <div id="pills_breakdown_skor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                            <!-- Diisi secara otomatis oleh JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -500,12 +629,311 @@ echo $style_css;
             function updateSubScore(idK) {
                 const select = document.getElementById('sub_select_' + idK);
                 const input = document.getElementById('sub_nilai_' + idK);
+                if (!select || !input) return;
                 const selectedOption = select.options[select.selectedIndex];
                 if(selectedOption && selectedOption.value !== "") {
                     input.value = selectedOption.getAttribute('data-score');
                 } else {
                     input.value = "";
                 }
+                calculateCombinedScore();
+            }
+
+            // Sinkronisasi otomatis Sub Kriteria berdasarkan Nilai Angka Manual (C1, C4, C5)
+            function autoMatchSubKriteria(idK) {
+                const input = document.getElementById('sub_nilai_' + idK);
+                const select = document.getElementById('sub_select_' + idK);
+                const badge = document.getElementById('kategori_badge_' + idK);
+                const scoreInd = document.getElementById('score_indicator_' + idK);
+
+                if (!input || !select) return;
+
+                const rawVal = input.value.trim();
+                if (rawVal === '' || isNaN(rawVal)) {
+                    select.value = '';
+                    if (badge) badge.innerHTML = '';
+                    if (scoreInd) scoreInd.textContent = '';
+                    calculateCombinedScore();
+                    return;
+                }
+
+                const val = parseFloat(rawVal);
+                let matchedSubId = null;
+                let matchedSubName = '';
+                let matchedScore = '';
+
+                const options = Array.from(select.options).filter(opt => opt.value !== "");
+
+                // 1. Cek pola range "A <= nilai < B" atau "A - B"
+                for (let opt of options) {
+                    const name = opt.getAttribute('data-nama') || opt.text;
+                    const rangeMatch = name.match(/(\d+(?:\.\d+)?)\s*<=\s*(?:nilai|[a-zA-Z]+)?\s*<\s*(\d+(?:\.\d+)?)/i);
+                    if (rangeMatch) {
+                        const min = parseFloat(rangeMatch[1]);
+                        const max = parseFloat(rangeMatch[2]);
+                        if (val >= min && val < max) {
+                            matchedSubId = opt.value;
+                            matchedSubName = name;
+                            matchedScore = opt.getAttribute('data-score');
+                            break;
+                        }
+                    }
+                    const dashMatch = name.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+                    if (dashMatch) {
+                        const min = parseFloat(dashMatch[1]);
+                        const max = parseFloat(dashMatch[2]);
+                        if (val >= min && val <= max) {
+                            matchedSubId = opt.value;
+                            matchedSubName = name;
+                            matchedScore = opt.getAttribute('data-score');
+                            break;
+                        }
+                    }
+                }
+
+                // 2. Cek pola batas atas ">= X" atau "> X"
+                if (!matchedSubId) {
+                    for (let opt of options) {
+                        const name = opt.getAttribute('data-nama') || opt.text;
+                        const gteMatch = name.match(/>=\s*(\d+(?:\.\d+)?)/);
+                        if (gteMatch) {
+                            const threshold = parseFloat(gteMatch[1]);
+                            if (val >= threshold) {
+                                matchedSubId = opt.value;
+                                matchedSubName = name;
+                                matchedScore = opt.getAttribute('data-score');
+                                break;
+                            }
+                        }
+                        const gtMatch = name.match(/^>\s*(\d+(?:\.\d+)?)/);
+                        if (gtMatch) {
+                            const threshold = parseFloat(gtMatch[1]);
+                            if (val > threshold) {
+                                matchedSubId = opt.value;
+                                matchedSubName = name;
+                                matchedScore = opt.getAttribute('data-score');
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 3. Cek pola batas bawah "<= X" atau "< X"
+                if (!matchedSubId) {
+                    for (let opt of options) {
+                        const name = opt.getAttribute('data-nama') || opt.text;
+                        const ltMatch = name.match(/^<\s*(\d+(?:\.\d+)?)/);
+                        if (ltMatch) {
+                            const threshold = parseFloat(ltMatch[1]);
+                            if (val < threshold) {
+                                matchedSubId = opt.value;
+                                matchedSubName = name;
+                                matchedScore = opt.getAttribute('data-score');
+                                break;
+                            }
+                        }
+                        const lteMatch = name.match(/<=\s*(\d+(?:\.\d+)?)/);
+                        if (lteMatch && !name.includes('>')) {
+                            const threshold = parseFloat(lteMatch[1]);
+                            if (val <= threshold) {
+                                matchedSubId = opt.value;
+                                matchedSubName = name;
+                                matchedScore = opt.getAttribute('data-score');
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 4. Fallback khusus kriteria
+                if (!matchedSubId) {
+                    if (idK === 1) { // Nilai Rapor
+                        matchedSubId = val >= 80 ? '3' : (val >= 70 ? '2' : '1');
+                    } else if (idK === 4) { // Nilai TKA
+                        matchedSubId = val >= 75 ? '12' : (val >= 65 ? '11' : '10');
+                    } else if (idK === 5) { // Skor Bhs Inggris
+                        matchedSubId = val >= 350 ? '15' : (val >= 300 ? '14' : '13');
+                    }
+                    if (matchedSubId) {
+                        const targetOpt = options.find(o => o.value == matchedSubId);
+                        if (targetOpt) {
+                            matchedSubName = targetOpt.getAttribute('data-nama') || targetOpt.text;
+                            matchedScore = targetOpt.getAttribute('data-score');
+                        }
+                    }
+                }
+
+                if (matchedSubId) {
+                    select.value = matchedSubId;
+                    if (scoreInd && matchedScore) {
+                        scoreInd.textContent = 'Bobot SPK: ' + matchedScore;
+                    }
+                    if (badge) {
+                        badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
+                        badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${matchedSubName}</strong> (Skor SPK: ${matchedScore || '-'})`;
+                    }
+                } else {
+                    select.value = '';
+                    if (badge) badge.innerHTML = '';
+                    if (scoreInd) scoreInd.textContent = '';
+                }
+
+                calculateCombinedScore();
+            }
+
+            function onManualSubSelectChange(idK) {
+                const select = document.getElementById('sub_select_' + idK);
+                const scoreInd = document.getElementById('score_indicator_' + idK);
+                const badge = document.getElementById('kategori_badge_' + idK);
+                if (!select) return;
+                const opt = select.options[select.selectedIndex];
+                if (opt && opt.value !== '') {
+                    const score = opt.getAttribute('data-score');
+                    const name = opt.getAttribute('data-nama') || opt.text;
+                    if (scoreInd && score) scoreInd.textContent = 'Bobot SPK: ' + score;
+                    if (badge) {
+                        badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
+                        badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${name}</strong> (Skor SPK: ${score || '-'})`;
+                    }
+                } else {
+                    if (scoreInd) scoreInd.textContent = '';
+                    if (badge) badge.innerHTML = '';
+                }
+                calculateCombinedScore();
+            }
+
+            // Menghitung dan menampilkan Hasil Gabungan dari Semua Skor Nilai
+            function calculateCombinedScore() {
+                const kriteriaDb = <?= json_encode($kriteria_db) ?>;
+                const manualIds = <?= json_encode($manual_kriteria_ids) ?>;
+
+                let totalSubScore = 0;
+                let weightedScore = 0;
+                let totalBobot = 0;
+                let filledCount = 0;
+                const totalCriteria = Object.keys(kriteriaDb).length;
+                let breakdown = [];
+
+                let cNo = 1;
+                for (let idK in kriteriaDb) {
+                    const idInt = parseInt(idK, 10);
+                    const krit = kriteriaDb[idK];
+                    const bobot = parseFloat(krit.bobot) || 0;
+                    totalBobot += bobot;
+
+                    const isManual = manualIds.includes(idInt);
+                    const sel = document.getElementById('sub_select_' + idK);
+                    const inp = document.getElementById('sub_nilai_' + idK);
+
+                    let currentScore = null;
+                    let displayLabel = '-';
+                    let rawVal = '';
+
+                    if (isManual) {
+                        const valStr = inp ? inp.value.trim() : '';
+                        rawVal = valStr;
+                        if (valStr !== '' && !isNaN(valStr) && sel && sel.selectedIndex >= 0) {
+                            const opt = sel.options[sel.selectedIndex];
+                            if (opt && opt.value !== '') {
+                                currentScore = parseFloat(opt.getAttribute('data-score'));
+                                displayLabel = (opt.getAttribute('data-nama') || opt.text).replace(/\s*\(Skor.*?\)/i, '');
+                            }
+                        }
+                    } else {
+                        if (sel && sel.selectedIndex >= 0) {
+                            const opt = sel.options[sel.selectedIndex];
+                            if (opt && opt.value !== '') {
+                                currentScore = parseFloat(opt.getAttribute('data-score'));
+                                displayLabel = opt.text;
+                                rawVal = displayLabel;
+                            }
+                        }
+                    }
+
+                    if (currentScore !== null && !isNaN(currentScore)) {
+                        filledCount++;
+                        totalSubScore += currentScore;
+                        weightedScore += (bobot / 100) * currentScore;
+                        breakdown.push({
+                            cNo: cNo,
+                            nama: krit.nama_kriteria,
+                            rawVal: rawVal,
+                            score: currentScore,
+                            bobot: bobot,
+                            displayLabel: displayLabel
+                        });
+                    }
+
+                    cNo++;
+                }
+
+                const fieldEl = document.getElementById('field_hasil_gabungan');
+                const badgeEl = document.getElementById('badge_status_gabungan');
+                const counterEl = document.getElementById('text_terisi_counter');
+                const breakdownContainer = document.getElementById('breakdown_gabungan_container');
+                const totalScoreEl = document.getElementById('stat_total_skor');
+                const weightedScoreEl = document.getElementById('stat_skor_terbobot');
+                const avgScoreEl = document.getElementById('stat_rata_skor');
+                const pillsContainer = document.getElementById('pills_breakdown_skor');
+
+                if (!fieldEl) return;
+
+                if (counterEl) {
+                    counterEl.textContent = `${filledCount}/${totalCriteria} Kriteria Terisi`;
+                }
+
+                if (filledCount === 0) {
+                    fieldEl.value = '';
+                    if (badgeEl) {
+                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200';
+                        badgeEl.textContent = 'Belum Ada Nilai Terisi';
+                    }
+                    if (breakdownContainer) breakdownContainer.classList.add('hidden');
+                    return;
+                }
+
+                const totalScoreFmt = totalSubScore.toFixed(2);
+                const weightedPercent = (weightedScore * 100).toFixed(2);
+                const avgScoreFmt = (totalSubScore / filledCount).toFixed(2);
+
+                if (filledCount < totalCriteria) {
+                    fieldEl.value = `Progres (${filledCount}/${totalCriteria} Kriteria Terisi) | Total Skor: ${totalScoreFmt} | Nilai Terbobot: ${weightedPercent}%`;
+                    if (badgeEl) {
+                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200';
+                        badgeEl.textContent = `Sebagian Terisi (${filledCount}/${totalCriteria})`;
+                    }
+                } else {
+                    fieldEl.value = `Total Skor: ${totalScoreFmt} | Nilai Akhir Terbobot (SPK): ${weightedPercent}% (Rata-rata: ${avgScoreFmt})`;
+                    if (badgeEl) {
+                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+                        badgeEl.textContent = '✓ Lengkap: Semua Kriteria Terisi';
+                    }
+                }
+
+                if (totalScoreEl) totalScoreEl.textContent = totalScoreFmt;
+                if (weightedScoreEl) weightedScoreEl.textContent = weightedPercent + '%';
+                if (avgScoreEl) avgScoreEl.textContent = avgScoreFmt;
+
+                if (pillsContainer) {
+                    let htmlPills = '';
+                    breakdown.forEach(item => {
+                        htmlPills += `
+                            <div class="p-3 bg-white rounded-xl border border-purple-100 shadow-sm flex flex-col justify-between">
+                                <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
+                                    <span class="font-bold text-purple-700">C${item.cNo} (Bobot ${item.bobot}%)</span>
+                                    <span class="text-gray-400 font-mono text-[10px] truncate max-w-[90px]">${item.displayLabel}</span>
+                                </div>
+                                <div class="flex items-baseline justify-between mt-1">
+                                    <span class="text-xs font-semibold text-gray-700 truncate max-w-[130px]" title="${item.nama}">${item.nama}</span>
+                                    <span class="font-mono font-bold text-sm text-purple-900 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">${item.score.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    pillsContainer.innerHTML = htmlPills;
+                }
+
+                if (breakdownContainer) breakdownContainer.classList.remove('hidden');
             }
 
             function goToStep(step) {
@@ -622,16 +1050,16 @@ echo $style_css;
 
                     let perbedaan = [];
                     if (!isGenderMatch) {
-                        perbedaan.push(`• <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
+                        perbedaan.push(`â€¢ <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
                     }
                     if (!isDayMatch) {
-                        perbedaan.push(`• <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
+                        perbedaan.push(`â€¢ <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
                     }
                     if (!isMonthMatch) {
-                        perbedaan.push(`• <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
+                        perbedaan.push(`â€¢ <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
                     }
                     if (!isYearMatch) {
-                        perbedaan.push(`• <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
+                        perbedaan.push(`â€¢ <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
                     }
 
                     return {
@@ -686,7 +1114,7 @@ echo $style_css;
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-emerald-600 font-semibold";
-                        tglMsg.textContent = "✓ Sesuai dengan 6 digit tanggal NIK";
+                        tglMsg.textContent = "âœ“ Sesuai dengan 6 digit tanggal NIK";
                         tglMsg.classList.remove('hidden');
                     } else {
                         nikMsg.className = "text-xs mt-1 text-rose-500 font-semibold flex items-center gap-1";
@@ -694,98 +1122,162 @@ echo $style_css;
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-rose-500 font-semibold";
-                        tglMsg.textContent = "⚠ Tanggal lahir belum sesuai dengan 6 digit NIK";
+                        tglMsg.textContent = "âš  Tanggal lahir belum sesuai dengan 6 digit NIK";
                         tglMsg.classList.remove('hidden');
                     }
                 } else if (nik.length === 16) {
                     nikMsg.className = "text-xs mt-1 text-purple-600 font-medium";
-                    nikMsg.textContent = "✓ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
+                    nikMsg.textContent = "âœ“ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
                     nikMsg.classList.remove('hidden');
                     tglMsg.classList.add('hidden');
                 }
             }
 
+            function validateStep1() {
+                const nama = document.getElementById('nama') ? document.getElementById('nama').value.trim() : '';
+                const nik = document.getElementById('nik') ? document.getElementById('nik').value.trim() : '';
+                const tglLahir = document.getElementById('tanggal_lahir') ? document.getElementById('tanggal_lahir').value : '';
+                const jk = document.getElementById('jenis_kelamin') ? document.getElementById('jenis_kelamin').value : 'L';
+
+                if (!nama) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Belum Lengkap',
+                        text: 'Nama Lengkap calon mahasiswa wajib diisi!',
+                        confirmButtonColor: '#9333ea'
+                    });
+                    return false;
+                }
+
+                if (!nik) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Belum Lengkap',
+                        text: 'NIK (Nomor Induk Kependudukan) wajib diisi!',
+                        confirmButtonColor: '#9333ea'
+                    });
+                    return false;
+                }
+
+                if (nik.length !== 16 || !/^\d{16}$/.test(nik)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Format NIK Tidak Valid',
+                        text: 'NIK harus berjumlah tepat 16 digit angka!',
+                        confirmButtonColor: '#9333ea'
+                    });
+                    return false;
+                }
+
+                if (!tglLahir) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Belum Lengkap',
+                        text: 'Tanggal lahir calon mahasiswa wajib dipilih!',
+                        confirmButtonColor: '#9333ea'
+                    });
+                    return false;
+                }
+
+                const nikCheck = validateNikTanggalLahir(nik, tglLahir, jk);
+                if (!nikCheck.valid) {
+                    let htmlMsg = `
+                        <div class="text-sm text-gray-700 text-left mb-3">
+                            Tanggal lahir yang Anda masukkan <strong class="text-rose-600">tidak sesuai</strong> dengan NIK (Nomor Induk Kependudukan).
+                        </div>
+                    `;
+
+                    if (nikCheck.perbedaan) {
+                        htmlMsg += `
+                            <div class="p-3 text-xs text-left bg-red-50 text-red-800 border border-red-200 rounded-lg mb-3 leading-relaxed">
+                                <div class="font-bold text-red-900 border-b border-red-200 pb-1 mb-1.5">Rincian Perbedaan:</div>
+                                ${nikCheck.perbedaan}
+                            </div>
+                        `;
+                    }
+
+                    htmlMsg += `
+                        <div class="p-3 text-xs text-left bg-gray-50 text-gray-600 border border-gray-200 rounded-lg space-y-1">
+                            <div class="font-bold text-gray-800 border-b border-gray-200 pb-1 mb-1">Ketentuan Format 16 Digit NIK:</div>
+                            <div>• <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
+                            <div>• <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
+                            <div>• <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
+                        </div>
+                    `;
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tanggal Lahir Tidak Sesuai!',
+                        html: htmlMsg,
+                        confirmButtonColor: '#9333ea',
+                        confirmButtonText: 'Periksa Kembali'
+                    });
+                    return false;
+                }
+
+                return true;
+            }
+
+            function validateStep2() {
+                const manualIds = <?= json_encode($manual_kriteria_ids) ?>;
+                const dropdownIds = <?= json_encode($dropdown_kriteria_ids) ?>;
+                const kriteriaMeta = <?= json_encode($kriteria_meta) ?>;
+
+                let missing = [];
+
+                manualIds.forEach(function(idK) {
+                    const input = document.getElementById('sub_nilai_' + idK);
+                    const val = input ? input.value.trim() : '';
+                    const meta = kriteriaMeta[idK] || { nama: 'Kriteria ' + idK, cNo: idK };
+
+                    if (val === '' || isNaN(val)) {
+                        missing.push(meta.nama + ' (C' + meta.cNo + ') belum diisi');
+                    } else {
+                        const num = parseFloat(val);
+                        if (num < 0) {
+                            missing.push(meta.nama + ' (C' + meta.cNo + ') tidak boleh bernilai negatif');
+                        } else if ((idK === 1 || idK === 4 || meta.cNo === 1 || meta.cNo === 4) && num > 100) {
+                            missing.push(meta.nama + ' (C' + meta.cNo + ') bernilai melebihi batas 100');
+                        }
+                    }
+                });
+
+                dropdownIds.forEach(function(idK) {
+                    const select = document.getElementById('sub_select_' + idK);
+                    const val = select ? select.value.trim() : '';
+                    const meta = kriteriaMeta[idK] || { nama: 'Kriteria ' + idK, cNo: idK };
+
+                    if (val === '') {
+                        missing.push(meta.nama + ' (C' + meta.cNo + ') belum dipilih');
+                    }
+                });
+
+                if (missing.length > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Nilai Penilaian Belum Lengkap',
+                        html: '<div class="text-left text-sm text-gray-700 mb-2">Silakan periksa kembali nilai yang Anda input pada Proses 2:</div>'
+                            + '<div class="p-3 text-xs text-left bg-amber-50 text-amber-900 border border-amber-200 rounded-lg leading-relaxed space-y-1 font-medium">'
+                            + '• ' + missing.join('<br>• ')
+                            + '</div>',
+                        confirmButtonColor: '#9333ea'
+                    });
+                    return false;
+                }
+
+                return true;
+            }
+
             function validateAndGoStep(targetStep) {
                 if (targetStep === 2) {
-                    const nama = document.getElementById('nama') ? document.getElementById('nama').value.trim() : '';
-                    const nik = document.getElementById('nik') ? document.getElementById('nik').value.trim() : '';
-                    const tglLahir = document.getElementById('tanggal_lahir') ? document.getElementById('tanggal_lahir').value : '';
-                    const jk = document.getElementById('jenis_kelamin') ? document.getElementById('jenis_kelamin').value : 'L';
-
-                    if (!nama) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Data Belum Lengkap',
-                            text: 'Nama Lengkap calon mahasiswa wajib diisi!',
-                            confirmButtonColor: '#9333ea'
-                        });
+                    if (!validateStep1()) return;
+                } else if (targetStep === 3) {
+                    if (!validateStep1()) {
+                        goToStep(1);
                         return;
                     }
-
-                    if (!nik) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Data Belum Lengkap',
-                            text: 'NIK (Nomor Induk Kependudukan) wajib diisi!',
-                            confirmButtonColor: '#9333ea'
-                        });
-                        return;
-                    }
-
-                    if (nik.length !== 16 || !/^\d{16}$/.test(nik)) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Format NIK Tidak Valid',
-                            text: 'NIK harus berjumlah tepat 16 digit angka!',
-                            confirmButtonColor: '#9333ea'
-                        });
-                        return;
-                    }
-
-                    if (!tglLahir) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Data Belum Lengkap',
-                            text: 'Tanggal lahir calon mahasiswa wajib dipilih!',
-                            confirmButtonColor: '#9333ea'
-                        });
-                        return;
-                    }
-
-                    // Eksekusi Validasi Kesesuaian NIK & Tanggal Lahir
-                    const nikCheck = validateNikTanggalLahir(nik, tglLahir, jk);
-                    if (!nikCheck.valid) {
-                        let htmlMsg = `
-                            <div class="text-sm text-gray-700 text-left mb-3">
-                                Tanggal lahir yang Anda masukkan <strong class="text-rose-600">tidak sesuai</strong> dengan NIK (Nomor Induk Kependudukan).
-                            </div>
-                        `;
-
-                        if (nikCheck.perbedaan) {
-                            htmlMsg += `
-                                <div class="p-3 text-xs text-left bg-red-50 text-red-800 border border-red-200 rounded-lg mb-3 leading-relaxed">
-                                    <div class="font-bold text-red-900 border-b border-red-200 pb-1 mb-1.5">Rincian Perbedaan:</div>
-                                    ${nikCheck.perbedaan}
-                                </div>
-                            `;
-                        }
-
-                        htmlMsg += `
-                            <div class="p-3 text-xs text-left bg-gray-50 text-gray-600 border border-gray-200 rounded-lg space-y-1">
-                                <div class="font-bold text-gray-800 border-b border-gray-200 pb-1 mb-1">Ketentuan Format 16 Digit NIK:</div>
-                                <div>• <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
-                                <div>• <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
-                                <div>• <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
-                            </div>
-                        `;
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Tanggal Lahir Tidak Sesuai!',
-                            html: htmlMsg,
-                            confirmButtonColor: '#9333ea',
-                            confirmButtonText: 'Periksa Kembali'
-                        });
+                    if (!validateStep2()) {
+                        goToStep(2);
                         return;
                     }
                 }
@@ -795,26 +1287,35 @@ echo $style_css;
             document.addEventListener("DOMContentLoaded", function() {
                 checkNikTanggalLive();
 
+                // Inisialisasi awal nilai manual (termasuk saat Edit pendaftar)
+                const manualIdsInit = <?= json_encode($manual_kriteria_ids) ?>;
+                manualIdsInit.forEach(function(idK) {
+                    const input = document.getElementById('sub_nilai_' + idK);
+                    if (input && input.value.trim() !== '') {
+                        autoMatchSubKriteria(idK);
+                    }
+                });
+
+                const dropdownIdsInit = <?= json_encode($dropdown_kriteria_ids) ?>;
+                dropdownIdsInit.forEach(function(idK) {
+                    updateSubScore(idK);
+                });
+
+                // Hitung kalkulasi gabungan seluruh skor nilai
+                calculateCombinedScore();
+
                 const formPendaftaran = document.getElementById('formPendaftaran');
                 if (formPendaftaran) {
                     formPendaftaran.addEventListener('submit', function(e) {
-                        const nik = document.getElementById('nik') ? document.getElementById('nik').value.trim() : '';
-                        const tglLahir = document.getElementById('tanggal_lahir') ? document.getElementById('tanggal_lahir').value : '';
-                        const jk = document.getElementById('jenis_kelamin') ? document.getElementById('jenis_kelamin').value : 'L';
-
-                        if (nik && tglLahir) {
-                            const nikCheck = validateNikTanggalLahir(nik, tglLahir, jk);
-                            if (!nikCheck.valid) {
-                                e.preventDefault();
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Tanggal Lahir Tidak Sesuai!',
-                                    text: 'Tanggal lahir tidak sesuai dengan NIK. Silakan periksa kembali sebelum menyimpan data.',
-                                    confirmButtonColor: '#9333ea'
-                                });
-                                goToStep(1);
-                                return false;
-                            }
+                        if (!validateStep1()) {
+                            e.preventDefault();
+                            goToStep(1);
+                            return false;
+                        }
+                        if (!validateStep2()) {
+                            e.preventDefault();
+                            goToStep(2);
+                            return false;
                         }
                     });
                 }

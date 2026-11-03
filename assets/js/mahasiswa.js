@@ -9,6 +9,148 @@ function updateSubScore(idK) {
     const score = selectedOpt ? selectedOpt.getAttribute('data-score') : '';
     if (score) {
         inputEl.value = parseFloat(score).toFixed(2);
+    } else {
+        inputEl.value = '';
+    }
+    if (typeof calculateCombinedScore === 'function') {
+        calculateCombinedScore();
+    }
+}
+
+function autoMatchSubKriteria(idK) {
+    const input = document.getElementById('sub_nilai_' + idK);
+    const select = document.getElementById('sub_select_' + idK);
+    const badge = document.getElementById('kategori_badge_' + idK);
+    const scoreInd = document.getElementById('score_indicator_' + idK);
+    if (!input || !select) return;
+
+    const rawVal = input.value.trim();
+    if (rawVal === '' || isNaN(rawVal)) {
+        select.value = '';
+        if (badge) badge.innerHTML = '';
+        if (scoreInd) scoreInd.textContent = '';
+        if (typeof calculateCombinedScore === 'function') calculateCombinedScore();
+        return;
+    }
+
+    const val = parseFloat(rawVal);
+    let matchedSubId = null;
+    let matchedSubName = '';
+    let matchedScore = '';
+
+    const options = Array.from(select.options).filter(opt => opt.value !== "");
+
+    for (let opt of options) {
+        const name = opt.getAttribute('data-nama') || opt.text;
+        const rangeMatch = name.match(/(\d+(?:\.\d+)?)\s*<=\s*(?:nilai|[a-zA-Z]+)?\s*<\s*(\d+(?:\.\d+)?)/i);
+        if (rangeMatch) {
+            const min = parseFloat(rangeMatch[1]);
+            const max = parseFloat(rangeMatch[2]);
+            if (val >= min && val < max) {
+                matchedSubId = opt.value;
+                matchedSubName = name;
+                matchedScore = opt.getAttribute('data-score');
+                break;
+            }
+        }
+        const dashMatch = name.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+        if (dashMatch) {
+            const min = parseFloat(dashMatch[1]);
+            const max = parseFloat(dashMatch[2]);
+            if (val >= min && val <= max) {
+                matchedSubId = opt.value;
+                matchedSubName = name;
+                matchedScore = opt.getAttribute('data-score');
+                break;
+            }
+        }
+    }
+
+    if (!matchedSubId) {
+        for (let opt of options) {
+            const name = opt.getAttribute('data-nama') || opt.text;
+            const gteMatch = name.match(/>=\s*(\d+(?:\.\d+)?)/);
+            if (gteMatch) {
+                const threshold = parseFloat(gteMatch[1]);
+                if (val >= threshold) {
+                    matchedSubId = opt.value;
+                    matchedSubName = name;
+                    matchedScore = opt.getAttribute('data-score');
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!matchedSubId) {
+        for (let opt of options) {
+            const name = opt.getAttribute('data-nama') || opt.text;
+            const ltMatch = name.match(/^<\s*(\d+(?:\.\d+)?)/);
+            if (ltMatch) {
+                const threshold = parseFloat(ltMatch[1]);
+                if (val < threshold) {
+                    matchedSubId = opt.value;
+                    matchedSubName = name;
+                    matchedScore = opt.getAttribute('data-score');
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!matchedSubId) {
+        if (idK === 1) matchedSubId = val >= 80 ? '3' : (val >= 70 ? '2' : '1');
+        else if (idK === 4) matchedSubId = val >= 75 ? '12' : (val >= 65 ? '11' : '10');
+        else if (idK === 5) matchedSubId = val >= 350 ? '15' : (val >= 300 ? '14' : '13');
+
+        if (matchedSubId) {
+            const targetOpt = options.find(o => o.value == matchedSubId);
+            if (targetOpt) {
+                matchedSubName = targetOpt.getAttribute('data-nama') || targetOpt.text;
+                matchedScore = targetOpt.getAttribute('data-score');
+            }
+        }
+    }
+
+    if (matchedSubId) {
+        select.value = matchedSubId;
+        if (scoreInd && matchedScore) scoreInd.textContent = 'Bobot SPK: ' + matchedScore;
+        if (badge) {
+            badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
+            badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${matchedSubName}</strong> (Skor: ${matchedScore || '-'})`;
+        }
+    } else {
+        select.value = '';
+        if (badge) badge.innerHTML = '';
+        if (scoreInd) scoreInd.textContent = '';
+    }
+
+    if (typeof calculateCombinedScore === 'function') {
+        calculateCombinedScore();
+    }
+}
+
+function onManualSubSelectChange(idK) {
+    const select = document.getElementById('sub_select_' + idK);
+    const scoreInd = document.getElementById('score_indicator_' + idK);
+    const badge = document.getElementById('kategori_badge_' + idK);
+    if (!select) return;
+    const opt = select.options[select.selectedIndex];
+    if (opt && opt.value !== '') {
+        const score = opt.getAttribute('data-score');
+        const name = opt.getAttribute('data-nama') || opt.text;
+        if (scoreInd && score) scoreInd.textContent = 'Bobot SPK: ' + score;
+        if (badge) {
+            badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
+            badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${name}</strong> (Skor: ${score || '-'})`;
+        }
+    } else {
+        if (scoreInd) scoreInd.textContent = '';
+        if (badge) badge.innerHTML = '';
+    }
+
+    if (typeof calculateCombinedScore === 'function') {
+        calculateCombinedScore();
     }
 }
 
@@ -162,6 +304,8 @@ function validateAndGoStep3() {
 }
 
 window.updateSubScore = updateSubScore;
+window.autoMatchSubKriteria = autoMatchSubKriteria;
+window.onManualSubSelectChange = onManualSubSelectChange;
 window.syncPenghasilanInput = syncPenghasilanInput;
 window.clearPenghasilan = clearPenghasilan;
 window.toggleBeasiswaAutoNotice = toggleBeasiswaAutoNotice;

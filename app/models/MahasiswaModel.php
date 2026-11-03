@@ -293,7 +293,7 @@ class MahasiswaModel {
         $isYearMatch = ($inputYY === $nikYY);
         $isGenderMatch = ($jk === $nikGender);
 
-        if (!$isDayMatch || !isMonthMatch || !isYearMatch || !isGenderMatch) {
+        if (!$isDayMatch || !$isMonthMatch || !$isYearMatch || !$isGenderMatch) {
             $nikDayFmt = str_pad($nikRealDay, 2, '0', STR_PAD_LEFT);
             $nikGenderTxt = ($nikGender === 'P') ? 'Perempuan (Tanggal + 40)' : 'Laki-laki';
             $inputGenderTxt = ($jk === 'P') ? 'Perempuan' : 'Laki-laki';
@@ -516,21 +516,135 @@ class MahasiswaModel {
         return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa = '$id'");
     }
 
+    public function determineSubKriteria($id_kriteria, $nilai) {
+        $id_k = (int)$id_kriteria;
+        if (!is_numeric($nilai)) return 0;
+        $val = (float)$nilai;
+
+        $q = mysqli_query($this->db, "SELECT id_sub, nama_sub, nilai FROM sub_kriteria WHERE id_kriteria = '$id_k' ORDER BY id_sub ASC");
+        if (!$q || mysqli_num_rows($q) == 0) return 0;
+
+        $subs = [];
+        while ($r = mysqli_fetch_assoc($q)) {
+            $subs[] = $r;
+        }
+
+        // 1. Cek pola range "A <= nilai < B" atau "A - B"
+        foreach ($subs as $s) {
+            $nama = trim($s['nama_sub']);
+            if (preg_match('/(\d+(?:\.\d+)?)\s*<=\s*(?:nilai|[a-zA-Z]+)?\s*<\s*(\d+(?:\.\d+)?)/i', $nama, $m)) {
+                $min = (float)$m[1];
+                $max = (float)$m[2];
+                if ($val >= $min && $val < $max) {
+                    return (int)$s['id_sub'];
+                }
+            } elseif (preg_match('/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/', $nama, $m)) {
+                $min = (float)$m[1];
+                $max = (float)$m[2];
+                if ($val >= $min && $val <= $max) {
+                    return (int)$s['id_sub'];
+                }
+            }
+        }
+
+        // 2. Cek pola batas atas ">= X" atau "> X"
+        foreach ($subs as $s) {
+            $nama = trim($s['nama_sub']);
+            if (preg_match('/>=\s*(\d+(?:\.\d+)?)/', $nama, $m)) {
+                $threshold = (float)$m[1];
+                if ($val >= $threshold) {
+                    return (int)$s['id_sub'];
+                }
+            } elseif (preg_match('/^>\s*(\d+(?:\.\d+)?)/', $nama, $m)) {
+                $threshold = (float)$m[1];
+                if ($val > $threshold) {
+                    return (int)$s['id_sub'];
+                }
+            }
+        }
+
+        // 3. Cek pola batas bawah "<= X" atau "< X"
+        foreach ($subs as $s) {
+            $nama = trim($s['nama_sub']);
+            if (preg_match('/^<\s*(\d+(?:\.\d+)?)/', $nama, $m)) {
+                $threshold = (float)$m[1];
+                if ($val < $threshold) {
+                    return (int)$s['id_sub'];
+                }
+            } elseif (preg_match('/<=\s*(\d+(?:\.\d+)?)/', $nama, $m) && strpos($nama, '>') === false) {
+                $threshold = (float)$m[1];
+                if ($val <= $threshold) {
+                    return (int)$s['id_sub'];
+                }
+            }
+        }
+
+        // 4. Fallback khusus berdasarkan id_kriteria spesifik:
+        if ($id_k === 1) { // Nilai Rapor
+            if ($val >= 80) return 3;
+            if ($val >= 70) return 2;
+            return 1;
+        }
+        if ($id_k === 4) { // Nilai TKA
+            if ($val >= 75) return 12;
+            if ($val >= 65) return 11;
+            return 10;
+        }
+        if ($id_k === 5) { // Skor Bahasa Inggris
+            if ($val >= 350) return 15;
+            if ($val >= 300) return 14;
+            return 13;
+        }
+
+        return !empty($subs) ? (int)$subs[0]['id_sub'] : 0;
+    }
+
     private function saveNilaiMahasiswa($id_mhs, $nilaiKriteria) {
         $id_mhs = (int)$id_mhs;
         mysqli_query($this->db, "DELETE FROM nilai WHERE id_mahasiswa = '$id_mhs'");
 
-        if (empty($nilaiKriteria['kriteria_nilai'])) return;
+        if (empty($nilaiKriteria['kriteria_nilai']) && empty($nilaiKriteria['kriteria_sub'])) return;
 
-        foreach ($nilaiKriteria['kriteria_nilai'] as $id_kriteria => $nilai) {
-            $id_k = (int)$id_kriteria;
-            $id_sub = isset($nilaiKriteria['kriteria_sub'][$id_k]) ? (int)$nilaiKriteria['kriteria_sub'][$id_k] : 0;
-            $val = is_numeric($nilai) ? (float)$nilai : 0;
+        // Ambil daftar kriteria untuk membedakan yang manual dan kategori
+        $qKrit = mysqli_query($this->db, "SELECT id_kriteria, nama_kriteria FROM kriteria");
+        $allKrit = [];
+        if ($qKrit) {
+            while ($k = mysqli_fetch_assoc($qKrit)) {
+                $allKrit[(int)$k['id_kriteria']] = $k['nama_kriteria'];
+            }
+        }
+
+        foreach ($allKrit as $id_k => $namaKrit) {
+            $nilaiRaw = $nilaiKriteria['kriteria_nilai'][$id_k] ?? null;
+            $subRaw = $nilaiKriteria['kriteria_sub'][$id_k] ?? null;
+
+            $val = (is_numeric($nilaiRaw) && $nilaiRaw !== '') ? (float)$nilaiRaw : null;
+            $id_sub = (int)$subRaw;
+
+            $isManual = in_array($id_k, [1, 4, 5])
+                || stripos($namaKrit, 'Rapor') !== false
+                || stripos($namaKrit, 'TKA') !== false
+                || stripos($namaKrit, 'Inggris') !== false;
+
+            if ($isManual && $val !== null) {
+                // Tentukan id_sub otomatis jika belum ada atau untuk sinkronisasi nilai manual
+                $autoSub = $this->determineSubKriteria($id_k, $val);
+                if ($autoSub > 0) {
+                    $id_sub = $autoSub;
+                }
+            } elseif (!$isManual && $id_sub > 0 && ($val === null || $val == 0)) {
+                // Untuk C2 & C3 (Prestasi): simpan bobot sub_kriteria sebagai nilai jika belum diinput
+                $qSub = mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub = '$id_sub'");
+                if ($qSub && $rSub = mysqli_fetch_assoc($qSub)) {
+                    $val = (float)$rSub['nilai'];
+                }
+            }
 
             if ($id_sub > 0) {
+                $sqlVal = ($val !== null) ? "'$val'" : "NULL";
                 mysqli_query($this->db, "
                     INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai)
-                    VALUES ('$id_mhs', '$id_k', '$id_sub', '$val')
+                    VALUES ('$id_mhs', '$id_k', '$id_sub', $sqlVal)
                 ");
             }
         }
@@ -542,8 +656,8 @@ class MahasiswaModel {
         if ($q) {
             while ($row = mysqli_fetch_assoc($q)) {
                 $res[$row['id_mahasiswa']][$row['id_kriteria']] = [
-                    'id_sub' => $row['id_sub'],
-                    'nilai'  => (float)$row['nilai']
+                    'id_sub' => (int)$row['id_sub'],
+                    'nilai'  => ($row['nilai'] !== null && $row['nilai'] !== '') ? (float)$row['nilai'] : ''
                 ];
             }
         }

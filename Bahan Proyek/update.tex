@@ -46,4 +46,23 @@ Ananta : (02/11/2026)
         5. Pembaruan Database (SQL)
                 a. Pembuatan tabel prodi berisi 8 daftar jurusan Universitas Triatma Mulya.
                 b. Pembaruan struktur ENUM pada kolom status tabel mahasiswa menjadi ('Menunggu', 'Diterima', 'Ditolak').
-                c. Pembaruan struktur ENUM pada kolom status tabel mahasiswa menjadi ('Menunggu', 'Diterima', 'Ditolak').
+
+Antigravity : (03/11/2026)
+        log :
+        1. Pembaruan Form Input Nilai Penilaian Mahasiswa (Proses 2)
+        2. Input Manual untuk Nilai Rapor (C1), Nilai TKA (C4), dan Skor Bahasa Inggris (C5)
+        3. Otomatisasi Pencocokan Sub Kriteria & Skor SPK berdasarkan Nilai Input Manual
+        4. Validasi Ketat Nilai Proses 2 pada Frontend & Backend
+
+        detail :
+        1. Input Nilai Mahasiswa (Proses 2)
+                a. Input Nilai Manual: Mengubah input Nilai Rapor (C1), Nilai TKA (C4), dan Skor Bahasa Inggris (C5) menjadi input angka langsung (editable) dengan batasan skala yang sesuai (0-100 untuk C1 & C4, skor tes/TOEFL untuk C5).
+                b. Kategori & Skor Otomatis: Menambahkan deteksi otomatis secara live pada frontend (JavaScript `autoMatchSubKriteria`) sehingga ketika nilai angka diketik, opsi sub kriteria dan bobot SPK langsung terpilih otomatis sesuai rentang yang ditentukan.
+                c. Pemisahan Desain Kriteria: Kriteria prestasi (C2 & C3) tetap menggunakan dropdown tingkat prestasi (Lokal, Nasional, Internasional) dengan skor SPK otomatis.
+        2. Sinkronisasi & Keamanan Database (MahasiswaModel.php)
+                a. Menambahkan method `determineSubKriteria($id_kriteria, $nilai)` di MahasiswaModel.php untuk mengevaluasi rentang matematis nama sub kriteria secara dinamis.
+                b. Mengupdate `saveNilaiMahasiswa` agar nilai numerik riil tersimpan di kolom `nilai` pada tabel `nilai` dan `id_sub` tersinkronisasi otomatis untuk kebutuhan klasifikasi Naive Bayes.
+                c. Memperbarui `getRawNilaiMahasiswa` agar nilai bernilai NULL tidak diubah menjadi 0.0 secara sembarangan sehingga placeholder input form tampil rapi.
+        3. Penyembunyian Skor Otomatis & Penambahan Field Hasil Gabungan
+                a. Menyembunyikan tampilan kolom "Skor Nilai (Otomatis)" pada tiap card kriteria (C1-C5) agar form tampil lebih bersih dan fokus pada input data.
+                b. Menambahkan field "Hasil Gabungan Skor Nilai Penilaian" di bagian paling bawah Proses 2 yang secara dinamis dan live menghitung serta menampilkan total skor gabungan, nilai akhir terbobot (SPK), dan rincian skor per kriteria.
