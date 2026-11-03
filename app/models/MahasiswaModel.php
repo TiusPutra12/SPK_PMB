@@ -60,77 +60,62 @@ class MahasiswaModel {
         return $res;
     }
 
+    // FITUR: Tambah Program Studi Baru ke Database
     public function addProgramStudi($nama_program) {
         $this->ensureProgramStudiTable();
         $nama_program = trim($nama_program);
-        if (empty($nama_program)) {
-            return ['success' => false, 'message' => 'Nama program studi tidak boleh kosong!'];
-        }
-        $nama_clean = mysqli_real_escape_string($this->db, $nama_program);
+        if (empty($nama_program)) return false;
 
-        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$nama_clean')");
+        $safe_nama = mysqli_real_escape_string($this->db, $nama_program);
+
+        // Cek duplikat nama prodi
+        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$safe_nama')");
         if ($check && mysqli_num_rows($check) > 0) {
-            return ['success' => false, 'message' => 'Program studi "' . $nama_program . '" sudah terdaftar!'];
+            return false; // Sudah terdaftar
         }
 
-        $ins = mysqli_query($this->db, "INSERT INTO program_studi (nama_program) VALUES ('$nama_clean')");
-        if ($ins) {
-            $new_id = mysqli_insert_id($this->db);
-            return [
-                'success' => true,
-                'message' => 'Program studi "' . $nama_program . '" berhasil ditambahkan!',
-                'id_program' => $new_id,
-                'nama_program' => $nama_program
-            ];
-        }
-        return ['success' => false, 'message' => 'Gagal menambahkan program studi: ' . mysqli_error($this->db)];
+        $ins = mysqli_query($this->db, "INSERT INTO program_studi (nama_program) VALUES ('$safe_nama')");
+        return $ins ? true : false;
     }
 
-    private function getDatasetByStatus($status_array) {
-        $status_in = "'" . implode("','", $status_array) . "'";
-        $query = mysqli_query($this->db, "
-            SELECT 
-                m.id_mahasiswa, m.nama_mahasiswa, m.status, m.golongan,
-                d.penghasilan_orangtua
-            FROM mahasiswa m
-            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
-            WHERE m.status IN ($status_in)
-        ");
+    // FITUR: Edit Program Studi
+    public function updateProgramStudi($id_program, $nama_program) {
+        $this->ensureProgramStudiTable();
+        $id = (int)$id_program;
+        $nama_program = trim($nama_program);
+        if ($id <= 0 || empty($nama_program)) return false;
 
-        $dataset = [];
-        while ($row = mysqli_fetch_assoc($query)) {
-            $id = $row['id_mahasiswa'];
-            $features = [
-                'ekonomi' => $row['penghasilan_orangtua'] ?: 'Kosong',
-                'golongan' => $row['golongan']
-            ];
-
-            $qNilai = mysqli_query($this->db, "SELECT id_kriteria, id_sub FROM nilai WHERE id_mahasiswa = '$id'");
-            while ($n = mysqli_fetch_assoc($qNilai)) {
-                $features['C' . $n['id_kriteria']] = 'SUB_' . $n['id_sub'];
-            }
-
-            $dataset[] = [
-                'id' => $id,
-                'nama' => $row['nama_mahasiswa'],
-                'status' => $row['status'],
-                'features' => $features
-            ];
+        $safe_nama = mysqli_real_escape_string($this->db, $nama_program);
+        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$safe_nama') AND id_program != '$id'");
+        if ($check && mysqli_num_rows($check) > 0) {
+            return false;
         }
-        return $dataset;
+
+        $upd = mysqli_query($this->db, "UPDATE program_studi SET nama_program = '$safe_nama' WHERE id_program = '$id'");
+        return $upd ? true : false;
+    }
+
+    // FITUR: Hapus Program Studi
+    public function deleteProgramStudi($id_program) {
+        $this->ensureProgramStudiTable();
+        $id = (int)$id_program;
+        if ($id <= 0) return false;
+
+        $del = mysqli_query($this->db, "DELETE FROM program_studi WHERE id_program = '$id'");
+        return $del ? true : false;
     }
 
     public function getAllMahasiswaWithDetail() {
         $q = mysqli_query($this->db, "
             SELECT 
                 m.id_mahasiswa, m.nim, m.nama_mahasiswa, m.status, m.golongan,
-                d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, d.asal_sekolah,
-                d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua,
+                d.id_data, d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, 
+                d.asal_sekolah, d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua,
                 d.pekerjaan_ayah, d.pekerjaan_ibu, d.penghasilan_ayah, d.penghasilan_ibu,
                 d.aset_kendaraan, d.aset_bangunan, d.uang_makan_harian
             FROM mahasiswa m
             LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
-            ORDER BY m.id_mahasiswa ASC
+            ORDER BY m.id_mahasiswa DESC
         ");
 
         $list = [];
@@ -139,46 +124,36 @@ class MahasiswaModel {
                 $id = (int)$row['id_mahasiswa'];
                 $nim = trim($row['nim']);
                 
-                $tahun = "2026";
+                // Menentukan Angkatan dari NIM
+                $tahun = '2024'; 
                 if (strlen($nim) >= 2 && is_numeric(substr($nim, 0, 2))) {
-                    $tahun = "20" . substr($nim, 0, 2);
+                    $tahun = '20' . substr($nim, 0, 2);
                 }
 
-                $prodi = !empty($row['jurusan_asal']) && $row['jurusan_asal'] !== '-' ? $row['jurusan_asal'] : '-';
-                $jk = "-";
-                if ($row['jenis_kelamin'] === 'L') { $jk = "Laki-laki"; } 
-                elseif ($row['jenis_kelamin'] === 'P') { $jk = "Perempuan"; }
-
-                $golongan = !empty($row['golongan']) ? $row['golongan'] : 'Umum';
-                $status = !empty($row['status']) ? $row['status'] : 'Menunggu';
-
                 $list[$id] = [
-                    'id'        => $id,
-                    'nama'      => $row['nama_mahasiswa'],
-                    'nim'       => $row['nim'],
-                    'nisn'      => $row['nim'],
-                    'prodi'     => $prodi,
-                    'tahun'     => $tahun,
-                    'status'    => $status,
-                    'golongan'  => $golongan,
-                    'identitas' => [
-                        'nik'                  => $row['nik'] ?: '-',
-                        'jenis_kelamin'        => $jk,
-                        'tempat_tanggal_lahir' => $row['tempat_tanggal_lahir'] ?: '-',
-                        'asal_sekolah'         => $row['asal_sekolah'] ?: '-',
-                        'jurusan_asal'         => $row['jurusan_asal'] ?: '-',
-                        'no_hp'                => $row['no_hp'] ?: '-',
-                        'email'                => $row['email'] ?: '-',
-                        'alamat'               => $row['alamat'] ?: '-',
-                        'penghasilan'          => $row['penghasilan_orangtua'] ?: '-',
+                    'id'            => $id,
+                    'nim'           => $nim,
+                    'nama'          => $row['nama_mahasiswa'],
+                    'prodi'         => !empty($row['jurusan_asal']) ? $row['jurusan_asal'] : 'Umum',
+                    'golongan'      => !empty($row['golongan']) ? $row['golongan'] : 'Umum',
+                    'tahun'         => $tahun,
+                    'status'        => !empty($row['status']) ? $row['status'] : 'Menunggu',
+                    'detail'        => [
+                        'nik'                  => $row['nik'] ?? '-',
+                        'jenis_kelamin'        => $row['jenis_kelamin'] ?? '-',
+                        'tempat_tanggal_lahir' => $row['tempat_tanggal_lahir'] ?? '-',
+                        'asal_sekolah'         => $row['asal_sekolah'] ?? '-',
+                        'no_hp'                => $row['no_hp'] ?? '-',
+                        'email'                => $row['email'] ?? '-',
+                        'alamat'               => $row['alamat'] ?? '-',
+                        'penghasilan_orangtua' => $row['penghasilan_orangtua'] ?? '-',
                         'pekerjaan_ayah'       => $row['pekerjaan_ayah'] ?? '-',
                         'pekerjaan_ibu'        => $row['pekerjaan_ibu'] ?? '-',
-                        'penghasilan_ayah'     => $row['penghasilan_ayah'] ?? '-',
-                        'penghasilan_ibu'      => $row['penghasilan_ibu'] ?? '-',
-                        'aset_kendaraan'       => $row['aset_kendaraan'] ?? '-',
-                        'aset_bangunan'        => $row['aset_bangunan'] ?? '-',
-                        'uang_makan_harian'    => $row['uang_makan_harian'] ?? '-',
-                        'jalur'                => $golongan
+                        'penghasilan_ayah'     => $row['penghasilan_ayah'] ?? null,
+                        'penghasilan_ibu'      => $row['penghasilan_ibu'] ?? null,
+                        'aset_kendaraan'       => $row['aset_kendaraan'] ?? null,
+                        'aset_bangunan'        => $row['aset_bangunan'] ?? null,
+                        'uang_makan_harian'    => $row['uang_makan_harian'] ?? null
                     ]
                 ];
             }
@@ -189,88 +164,110 @@ class MahasiswaModel {
     public function getMahasiswaById($id) {
         $id = (int)$id;
         $q = mysqli_query($this->db, "
-            SELECT m.*, d.* 
-            FROM mahasiswa m 
-            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa 
-            WHERE m.id_mahasiswa='$id'
+            SELECT 
+                m.id_mahasiswa, m.nim, m.nama_mahasiswa, m.status, m.golongan,
+                d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, 
+                d.asal_sekolah, d.jurusan_asal, d.no_hp, d.email, d.alamat, d.penghasilan_orangtua,
+                d.pekerjaan_ayah, d.pekerjaan_ibu, d.penghasilan_ayah, d.penghasilan_ibu,
+                d.aset_kendaraan, d.aset_bangunan, d.uang_makan_harian
+            FROM mahasiswa m
+            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
+            WHERE m.id_mahasiswa = '$id'
         ");
-        return mysqli_fetch_assoc($q);
+        if ($q && mysqli_num_rows($q) > 0) {
+            return mysqli_fetch_assoc($q);
+        }
+        return null;
     }
 
-    public function getRawNilaiMahasiswa() {
+    public function generateNIM() {
+        $prefix = date('y'); // 2 Digit Tahun Saat ini, contoh: 26
+        $jurusan_code = "0101"; // Kode default Teknik Informatika/PMB UNTRI
+        $searchPrefix = $prefix . $jurusan_code;
+        
         $q = mysqli_query($this->db, "
-            SELECT 
-                n.id_mahasiswa, n.id_kriteria, n.nilai AS nilai_input,
-                k.nama_kriteria, k.bobot, s.id_sub, s.nama_sub, s.nilai AS bobot_sub
-            FROM nilai n
-            JOIN kriteria k ON n.id_kriteria = k.id_kriteria
-            LEFT JOIN sub_kriteria s ON n.id_sub = s.id_sub
-            ORDER BY n.id_mahasiswa ASC, n.id_kriteria ASC
+            SELECT nim FROM mahasiswa 
+            WHERE nim LIKE '{$searchPrefix}%' 
+            ORDER BY nim DESC LIMIT 1
         ");
-
-        $result = ['formatted' => [], 'raw' => []];
-        if ($q) {
-            while ($n = mysqli_fetch_assoc($q)) {
-                $id_mhs = (int)$n['id_mahasiswa'];
-                $id_krit = (int)$n['id_kriteria'];
-                $val = !is_null($n['nilai_input']) ? (float)$n['nilai_input'] : (float)$n['bobot_sub'];
-
-                $result['formatted'][$id_mhs][$id_krit] = [
-                    'kode'       => 'C' . $id_krit,
-                    'nama'       => $n['nama_kriteria'],
-                    'bobot'      => $n['bobot'] . '%',
-                    'nilai'      => $val,
-                    'keterangan' => $n['nama_sub'] ?: '-'
-                ];
-
-                $result['raw'][$id_mhs][$id_krit] = [
-                    'id_sub' => (int)$n['id_sub'],
-                    'nilai'  => $val
-                ];
+        
+        $nextNumber = 1;
+        if ($q && mysqli_num_rows($q) > 0) {
+            $row = mysqli_fetch_assoc($q);
+            $lastNim = $row['nim'];
+            $lastSeq = substr($lastNim, strlen($searchPrefix));
+            if (is_numeric($lastSeq)) {
+                $nextNumber = (int)$lastSeq + 1;
             }
         }
-        return $result;
+        
+        return $searchPrefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Helper Konversi Nilai Numeric/Null untuk Kolom Database INT
+    private function prepareSqlInt($val) {
+        if ($val === null || $val === '' || $val === '-') {
+            return "NULL";
+        }
+        if (is_numeric($val)) {
+            return (int)$val;
+        }
+        // Jika format string rupiah (misal "< Rp 1.500.000") ekstrak angka atau default NULL
+        $clean = preg_replace('/[^0-9]/', '', (string)$val);
+        if ($clean !== '') {
+            return (int)$clean;
+        }
+        return "NULL";
     }
 
     // Validasi Kesesuaian NIK dan Tanggal Lahir (Aturan Dukcapil)
     public function validateNikWithTtl($nik, $ttl, $jk) {
-        $nik = trim($nik ?? '');
-        if ($nik === '' || $nik === '-') {
-            return ['valid' => true];
-        }
-        
+        $nik = trim($nik);
         if (strlen($nik) !== 16 || !ctype_digit($nik)) {
-            return ['valid' => false, 'message' => 'NIK harus berjumlah 16 digit angka.'];
+            return [
+                'valid' => false,
+                'message' => "NIK harus berjumlah tepat 16 digit angka."
+            ];
         }
 
-        $parts = explode(', ', $ttl);
-        $tgl = count($parts) == 2 ? trim($parts[1]) : trim($ttl);
-
-        if (empty($tgl) || $tgl === '-') {
-            return ['valid' => false, 'message' => 'Tanggal lahir tidak boleh kosong untuk verifikasi NIK.'];
+        if (empty($ttl) || $ttl === '-') {
+            return ['valid' => true]; // Lewati jika tidak ada TTL
         }
 
-        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $tgl, $m)) {
-            $inputYear = (int)$m[1];
-            $inputMonth = (int)$m[2];
-            $inputDay = (int)$m[3];
-        } elseif (preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $tgl, $m)) {
-            $inputDay = (int)$m[1];
-            $inputMonth = (int)$m[2];
-            $inputYear = (int)$m[3];
+        // Format TTL di sistem: "Tempat, YYYY-MM-DD" atau "YYYY-MM-DD" atau "Tempat, DD-MM-YYYY"
+        $tglStr = '';
+        if (strpos($ttl, ', ') !== false) {
+            $parts = explode(', ', $ttl);
+            $tglStr = trim($parts[1] ?? '');
         } else {
-            return ['valid' => false, 'message' => 'Format tanggal lahir tidak valid.'];
+            $tglStr = trim($ttl);
         }
 
-        $inputYY = substr((string)$inputYear, -2);
-        $inputMM = str_pad($inputMonth, 2, '0', STR_PAD_LEFT);
+        $y = ''; $m = ''; $d = '';
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $tglStr, $matches)) {
+            $y = $matches[1];
+            $m = $matches[2];
+            $d = $matches[3];
+        } elseif (preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $tglStr, $matches)) {
+            $d = $matches[1];
+            $m = $matches[2];
+            $y = $matches[3];
+        } else {
+            return ['valid' => true]; // Jika format bebas/tak dikenali kalender, toleransi
+        }
+
+        $inputDay = (int)$d;
+        $inputMM = str_pad($m, 2, '0', STR_PAD_LEFT);
+        $inputYY = substr($y, -2);
 
         $nikDayRaw = (int)substr($nik, 6, 2);
         $nikMM = substr($nik, 8, 2);
+        $nikMonth = (int)$nikMM;
         $nikYY = substr($nik, 10, 2);
 
         $nikGender = '';
         $nikRealDay = 0;
+
         if ($nikDayRaw > 40 && $nikDayRaw <= 71) {
             $nikGender = 'P';
             $nikRealDay = $nikDayRaw - 40;
@@ -278,13 +275,46 @@ class MahasiswaModel {
             $nikGender = 'L';
             $nikRealDay = $nikDayRaw;
         } else {
-            return ['valid' => false, 'message' => 'Digit tanggal pada NIK (digit ke-7 & 8) tidak valid sesuai ketentuan Dukcapil.'];
-        }
-
-        if ($inputDay !== $nikRealDay || $inputMM !== $nikMM || $inputYY !== $nikYY || $jk !== $nikGender) {
             return [
                 'valid' => false,
-                'message' => 'Tanggal lahir atau jenis kelamin tidak sesuai dengan informasi 6 digit pada NIK (Nomor Induk Kependudukan).'
+                'message' => "Digit tanggal lahir pada NIK (" . substr($nik, 6, 2) . ") tidak valid sesuai standar Dukcapil."
+            ];
+        }
+
+        if ($nikMonth < 1 || $nikMonth > 12) {
+            return [
+                'valid' => false,
+                'message' => "Digit bulan lahir pada NIK (" . $nikMM . ") tidak valid."
+            ];
+        }
+
+        $isDayMatch = ($inputDay === $nikRealDay);
+        $isMonthMatch = ($inputMM === $nikMM);
+        $isYearMatch = ($inputYY === $nikYY);
+        $isGenderMatch = ($jk === $nikGender);
+
+        if (!$isDayMatch || !isMonthMatch || !isYearMatch || !isGenderMatch) {
+            $nikDayFmt = str_pad($nikRealDay, 2, '0', STR_PAD_LEFT);
+            $nikGenderTxt = ($nikGender === 'P') ? 'Perempuan (Tanggal + 40)' : 'Laki-laki';
+            $inputGenderTxt = ($jk === 'P') ? 'Perempuan' : 'Laki-laki';
+
+            $errDetail = [];
+            if (!$isGenderMatch) {
+                $errDetail[] = "Jenis kelamin pada NIK ($nikGenderTxt) tidak cocok dengan pilihan form ($inputGenderTxt)";
+            }
+            if (!$isDayMatch) {
+                $errDetail[] = "Tanggal lahir pada NIK ($nikRealDay) berbeda dengan pilihan form ($inputDay)";
+            }
+            if (!$isMonthMatch) {
+                $errDetail[] = "Bulan lahir pada NIK ($nikMonth) berbeda dengan pilihan form ($inputMM)";
+            }
+            if (!$isYearMatch) {
+                $errDetail[] = "Tahun lahir pada NIK (akhiran $nikYY) berbeda dengan tahun ($y)";
+            }
+
+            return [
+                'valid' => false,
+                'message' => "Tanggal Lahir/Gender tidak sesuai NIK! " . implode(', ', $errDetail) . "."
             ];
         }
 
@@ -292,37 +322,27 @@ class MahasiswaModel {
     }
 
     public function createMahasiswa($mhsData, $detailData, $nilaiKriteria = []) {
-        $rawNim = trim($mhsData['nim'] ?? '');
-        if (empty($rawNim)) {
-            $prefix = date('y') . '010';
-            $qLast = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim LIKE '{$prefix}%' ORDER BY nim DESC LIMIT 1");
-            if ($qLast && $rowLast = mysqli_fetch_assoc($qLast)) {
-                $lastNum = (int)substr($rowLast['nim'], strlen($prefix));
-                $nextNum = str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-                $nim = $prefix . $nextNum;
-            } else {
-                $nim = $prefix . '0001';
-            }
-            while (mysqli_num_rows(mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'")) > 0) {
-                $lastNum = (int)substr($nim, strlen($prefix));
-                $nim = $prefix . str_pad($lastNum + 1, 4, '0', STR_PAD_LEFT);
-            }
-        } else {
-            $nim = mysqli_real_escape_string($this->db, $rawNim);
-            // Validasi Duplikat NIM
-            $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'");
-            if (mysqli_num_rows($cekNIM) > 0) {
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['error_msg'] = "Gagal! NIM '$nim' sudah terdaftar.";
-                return false;
-            }
+        $nim = trim($mhsData['nim'] ?? '');
+        
+        // Auto-Generate NIM jika kosong
+        if (empty($nim)) {
+            $nim = $this->generateNIM();
         }
 
-        // Validasi Duplikat NIK
+        // 1. Validasi Duplikat NIM
+        $nim = mysqli_real_escape_string($this->db, $nim);
+        $cekNIM = mysqli_query($this->db, "SELECT nim FROM mahasiswa WHERE nim = '$nim'");
+        if ($cekNIM && mysqli_num_rows($cekNIM) > 0) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['error_msg'] = "Gagal! NIM '$nim' sudah terdaftar dalam sistem.";
+            return false;
+        }
+
+        // 2. Validasi Duplikat NIK
         $nik = !empty($detailData['nik']) ? mysqli_real_escape_string($this->db, $detailData['nik']) : '-';
         if ($nik !== '-' && $nik !== '') {
             $cekNIK = mysqli_query($this->db, "SELECT nik FROM data_mahasiswa WHERE nik = '$nik'");
-            if (mysqli_num_rows($cekNIK) > 0) {
+            if ($cekNIK && mysqli_num_rows($cekNIK) > 0) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['error_msg'] = "Gagal! NIK '$nik' sudah terdaftar dalam sistem.";
                 return false;
@@ -332,7 +352,7 @@ class MahasiswaModel {
         $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
         $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
 
-        // Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK
+        // 3. Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK
         if ($nik !== '-' && $nik !== '') {
             $checkNik = $this->validateNikWithTtl($nik, $ttl, $jk);
             if (!$checkNik['valid']) {
@@ -360,11 +380,12 @@ class MahasiswaModel {
 
         $pekerjaan_ayah = !empty($detailData['pekerjaan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ayah']) : '-';
         $pekerjaan_ibu = !empty($detailData['pekerjaan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ibu']) : '-';
-        $penghasilan_ayah = !empty($detailData['penghasilan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ayah']) : '-';
-        $penghasilan_ibu = !empty($detailData['penghasilan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ibu']) : '-';
-        $aset_kendaraan = !empty($detailData['aset_kendaraan']) ? mysqli_real_escape_string($this->db, $detailData['aset_kendaraan']) : '-';
-        $aset_bangunan = !empty($detailData['aset_bangunan']) ? mysqli_real_escape_string($this->db, $detailData['aset_bangunan']) : '-';
-        $uang_makan = !empty($detailData['uang_makan_harian']) ? mysqli_real_escape_string($this->db, $detailData['uang_makan_harian']) : '-';
+        
+        $sql_penghasilan_ayah = $this->prepareSqlInt($detailData['penghasilan_ayah'] ?? null);
+        $sql_penghasilan_ibu  = $this->prepareSqlInt($detailData['penghasilan_ibu'] ?? null);
+        $sql_aset_kendaraan   = $this->prepareSqlInt($detailData['aset_kendaraan'] ?? null);
+        $sql_aset_bangunan    = $this->prepareSqlInt($detailData['aset_bangunan'] ?? null);
+        $sql_uang_makan       = $this->prepareSqlInt($detailData['uang_makan_harian'] ?? null);
 
         $qDetail = mysqli_query($this->db, "
             INSERT INTO data_mahasiswa (
@@ -376,15 +397,15 @@ class MahasiswaModel {
             VALUES (
                 '$id_new', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
                 '$hp', '$email', '$alamat', '$penghasilan', '$golongan',
-                '$pekerjaan_ayah', '$pekerjaan_ibu', '$penghasilan_ayah', '$penghasilan_ibu',
-                '$aset_kendaraan', '$aset_bangunan', '$uang_makan'
+                '$pekerjaan_ayah', '$pekerjaan_ibu', $sql_penghasilan_ayah, $sql_penghasilan_ibu,
+                $sql_aset_kendaraan, $sql_aset_bangunan, $sql_uang_makan
             )
         ");
 
         if (!$qDetail) {
              mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa = '$id_new'");
              if (session_status() === PHP_SESSION_NONE) session_start();
-             $_SESSION['error_msg'] = "Gagal menyimpan detail mahasiswa! (Error DB)";
+             $_SESSION['error_msg'] = "Gagal menyimpan detail mahasiswa! (Error DB: " . mysqli_error($this->db) . ")";
              return false;
         }
 
@@ -449,11 +470,12 @@ class MahasiswaModel {
 
         $pekerjaan_ayah = !empty($detailData['pekerjaan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ayah']) : '-';
         $pekerjaan_ibu = !empty($detailData['pekerjaan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['pekerjaan_ibu']) : '-';
-        $penghasilan_ayah = !empty($detailData['penghasilan_ayah']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ayah']) : '-';
-        $penghasilan_ibu = !empty($detailData['penghasilan_ibu']) ? mysqli_real_escape_string($this->db, $detailData['penghasilan_ibu']) : '-';
-        $aset_kendaraan = !empty($detailData['aset_kendaraan']) ? mysqli_real_escape_string($this->db, $detailData['aset_kendaraan']) : '-';
-        $aset_bangunan = !empty($detailData['aset_bangunan']) ? mysqli_real_escape_string($this->db, $detailData['aset_bangunan']) : '-';
-        $uang_makan = !empty($detailData['uang_makan_harian']) ? mysqli_real_escape_string($this->db, $detailData['uang_makan_harian']) : '-';
+        
+        $sql_penghasilan_ayah = $this->prepareSqlInt($detailData['penghasilan_ayah'] ?? null);
+        $sql_penghasilan_ibu  = $this->prepareSqlInt($detailData['penghasilan_ibu'] ?? null);
+        $sql_aset_kendaraan   = $this->prepareSqlInt($detailData['aset_kendaraan'] ?? null);
+        $sql_aset_bangunan    = $this->prepareSqlInt($detailData['aset_bangunan'] ?? null);
+        $sql_uang_makan       = $this->prepareSqlInt($detailData['uang_makan_harian'] ?? null);
 
         $cek = mysqli_query($this->db, "SELECT id_data FROM data_mahasiswa WHERE id_mahasiswa='$id'");
         if ($cek && mysqli_num_rows($cek) > 0) {
@@ -463,9 +485,9 @@ class MahasiswaModel {
                     asal_sekolah='$sekolah', jurusan_asal='$jurusan', no_hp='$hp', email='$email', alamat='$alamat',
                     penghasilan_orangtua='$penghasilan', golongan='$golongan',
                     pekerjaan_ayah='$pekerjaan_ayah', pekerjaan_ibu='$pekerjaan_ibu',
-                    penghasilan_ayah='$penghasilan_ayah', penghasilan_ibu='$penghasilan_ibu',
-                    aset_kendaraan='$aset_kendaraan', aset_bangunan='$aset_bangunan',
-                    uang_makan_harian='$uang_makan'
+                    penghasilan_ayah=$sql_penghasilan_ayah, penghasilan_ibu=$sql_penghasilan_ibu,
+                    aset_kendaraan=$sql_aset_kendaraan, aset_bangunan=$sql_aset_bangunan,
+                    uang_makan_harian=$sql_uang_makan
                 WHERE id_mahasiswa='$id'
             ");
         } else {
@@ -479,8 +501,8 @@ class MahasiswaModel {
                 VALUES (
                     '$id', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
                     '$hp', '$email', '$alamat', '$penghasilan', '$golongan',
-                    '$pekerjaan_ayah', '$pekerjaan_ibu', '$penghasilan_ayah', '$penghasilan_ibu',
-                    '$aset_kendaraan', '$aset_bangunan', '$uang_makan'
+                    '$pekerjaan_ayah', '$pekerjaan_ibu', $sql_penghasilan_ayah, $sql_penghasilan_ibu,
+                    $sql_aset_kendaraan, $sql_aset_bangunan, $sql_uang_makan
                 )
             ");
         }
@@ -489,34 +511,42 @@ class MahasiswaModel {
         return true;
     }
 
+    public function deleteMahasiswa($id) {
+        $id = (int)$id;
+        return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa = '$id'");
+    }
+
     private function saveNilaiMahasiswa($id_mhs, $nilaiKriteria) {
         $id_mhs = (int)$id_mhs;
-        if (empty($nilaiKriteria['kriteria_sub']) || !is_array($nilaiKriteria['kriteria_sub'])) return;
+        mysqli_query($this->db, "DELETE FROM nilai WHERE id_mahasiswa = '$id_mhs'");
 
-        foreach ($nilaiKriteria['kriteria_sub'] as $idK => $idSub) {
-            $idK = (int)$idK;
-            $idSub = (int)$idSub;
-            if ($idSub <= 0) continue;
+        if (empty($nilaiKriteria['kriteria_nilai'])) return;
 
-            $valInput = isset($nilaiKriteria['kriteria_nilai'][$idK]) ? (float)$nilaiKriteria['kriteria_nilai'][$idK] : null;
-            if ($valInput === null) {
-                $qSubVal = mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub='$idSub'");
-                if ($qSubVal && $dSub = mysqli_fetch_assoc($qSubVal)) {
-                    $valInput = (float)$dSub['nilai'];
-                }
-            }
+        foreach ($nilaiKriteria['kriteria_nilai'] as $id_kriteria => $nilai) {
+            $id_k = (int)$id_kriteria;
+            $id_sub = isset($nilaiKriteria['kriteria_sub'][$id_k]) ? (int)$nilaiKriteria['kriteria_sub'][$id_k] : 0;
+            $val = is_numeric($nilai) ? (float)$nilai : 0;
 
-            $cekNilai = mysqli_query($this->db, "SELECT id_nilai FROM nilai WHERE id_mahasiswa='$id_mhs' AND id_kriteria='$idK'");
-            if ($cekNilai && mysqli_num_rows($cekNilai) > 0) {
-                mysqli_query($this->db, "UPDATE nilai SET id_sub='$idSub', nilai='$valInput' WHERE id_mahasiswa='$id_mhs' AND id_kriteria='$idK'");
-            } else {
-                mysqli_query($this->db, "INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai) VALUES ('$id_mhs', '$idK', '$idSub', '$valInput')");
+            if ($id_sub > 0) {
+                mysqli_query($this->db, "
+                    INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai)
+                    VALUES ('$id_mhs', '$id_k', '$id_sub', '$val')
+                ");
             }
         }
     }
 
-    public function deleteMahasiswa($id) {
-        $id = (int)$id;
-        return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa='$id'");
+    public function getRawNilaiMahasiswa() {
+        $q = mysqli_query($this->db, "SELECT * FROM nilai");
+        $res = [];
+        if ($q) {
+            while ($row = mysqli_fetch_assoc($q)) {
+                $res[$row['id_mahasiswa']][$row['id_kriteria']] = [
+                    'id_sub' => $row['id_sub'],
+                    'nilai'  => (float)$row['nilai']
+                ];
+            }
+        }
+        return ['raw' => $res];
     }
 }

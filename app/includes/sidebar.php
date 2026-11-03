@@ -78,19 +78,10 @@ $isAnalisis = in_array($page, ['analisis']);
                     
                     <a href="kriteria.php?page=kriteria" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'kriteria') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Data Kriteria</a>
                     
-                    <!-- NESTED DROPDOWN: DATA MAHASISWA -->
-                    <div class="relative">
-                        <button onclick="toggleDropdown('menuMhsSub', 'arrowMhsSub', event)" class="w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-all focus:outline-none <?= $isMahasiswaData ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?>">
-                            <span class="whitespace-nowrap">Data Mahasiswa</span>
-                            <svg id="arrowMhsSub" class="w-4 h-4 transition-transform duration-300 <?= $isMahasiswaData ? 'rotate-180' : '' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div id="menuMhsSub" class="sidebar-menu-transition <?= $isMahasiswaData ? 'sidebar-dropdown-open' : 'sidebar-dropdown-closed' ?>">
-                            <div class="flex flex-col space-y-1 pl-4 py-1 border-l-2 border-purple-500/20 ml-4 mt-1">
-                                <a href="mahasiswa.php?page=mahasiswa&jenis=mahasiswa" class="block px-4 py-1.5 text-xs rounded-lg transition-all <?= ($page == 'mahasiswa' && $jenis == 'mahasiswa') ? 'text-purple-400 font-semibold' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Mahasiswa</a>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="mahasiswa.php?page=mahasiswa&jenis=camaba" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Set Alternatif</a>
+                    <!-- DATA MAHASISWA -->
+                    <a href="mahasiswa.php?page=mahasiswa&jenis=mahasiswa" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'mahasiswa') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Data Mahasiswa</a>
+                    
+                    <a href="mahasiswa.php?page=alternatif&jenis=camaba" class="block px-4 py-2 text-sm rounded-lg transition-all <?= ($page == 'alternatif') ? 'text-purple-400 font-medium bg-purple-500/10' : 'text-gray-400 hover:text-purple-300 hover:bg-gray-800/50' ?> whitespace-nowrap">Set Alternatif</a>
                 </div>
             </div>
         </div>

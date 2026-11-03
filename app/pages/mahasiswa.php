@@ -232,12 +232,18 @@ echo $style_css;
                             </div>
                         </div>
 
-                        <div class="flex justify-between pt-2">
-                            <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali</button>
-                            <button type="button" id="btnLanjutKe3" onclick="validateAndGoStep(3)" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2">
-                                <span>Lanjut ke Proses 3: Pengajuan Beasiswa</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </button>
+                        <div class="flex justify-between items-center pt-2 gap-3 flex-wrap">
+                            <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali ke Data Diri</button>
+                            <div class="flex items-center gap-3">
+                                <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" onclick="setGolonganUmumDirect()" class="px-6 py-3 bg-white border-2 border-purple-600 text-purple-700 font-bold rounded-lg hover:bg-purple-50 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Simpan (Jalur Reguler / Tanpa Beasiswa)</span>
+                                </button>
+                                <button type="button" id="btnLanjutKe3" onclick="validateAndGoStep(3)" class="px-7 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer">
+                                    <span>Lanjut ke Proses 3: Pengajuan Beasiswa</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -248,7 +254,7 @@ echo $style_css;
                                     <span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span> 
                                     PROSES 3: PENGAJUAN BEASISWA & DATA SOSIAL EKONOMI
                                 </h3>
-                                <span class="text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200">Kriteria Penilaian Ekonomi</span>
+                                <span id="badgeStatusBeasiswa" class="text-xs font-semibold <?= $golongan_val === "Umum" ? "bg-gray-100 text-gray-600 border-gray-200" : "bg-amber-100 text-amber-800 border-amber-200" ?> px-3 py-1 rounded-full border"><?= $golongan_val === "Umum" ? "Jalur Reguler / Tanpa Beasiswa (Opsional)" : "Kriteria Penilaian Ekonomi" ?></span>
                             </div>
 
                             <!-- Opsi Jalur Pengajuan Beasiswa -->
@@ -272,7 +278,7 @@ echo $style_css;
                             </div>
                             
                             <!-- Formulir Rincian Beasiswa -->
-                            <div id="containerDetailBeasiswa" class="space-y-6">
+                            <div id="containerDetailBeasiswa" class="space-y-6 <?= $golongan_val === "Umum" ? "opacity-40 pointer-events-none" : "" ?>">
                                 <!-- 1. Pekerjaan & Penghasilan Orang Tua (Ayah dan Ibu) -->
                                 <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
                                     <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
@@ -444,16 +450,32 @@ echo $style_css;
         </div>
         
         <script>
+            function setGolonganUmumDirect() {
+                const golInput = document.getElementById('golonganInput');
+                if (golInput) golInput.value = 'Umum';
+                const radioUmum = document.querySelector('input[name="ajukan_beasiswa"][value="Umum"]');
+                if (radioUmum) radioUmum.checked = true;
+            }
+
             function updateGolonganFromRadio(val) {
                 const golInput = document.getElementById('golonganInput');
                 if (golInput) golInput.value = val;
 
                 const detailContainer = document.getElementById('containerDetailBeasiswa');
+                const badgeStatus = document.getElementById('badgeStatusBeasiswa');
                 if (detailContainer) {
                     if (val === 'Umum') {
-                        detailContainer.classList.add('opacity-40');
+                        detailContainer.classList.add('opacity-40', 'pointer-events-none');
+                        if (badgeStatus) {
+                            badgeStatus.textContent = 'Jalur Reguler / Tanpa Beasiswa (Data Tidak Wajib)';
+                            badgeStatus.className = 'text-xs font-semibold bg-gray-100 text-gray-600 px-3 py-1 rounded-full border border-gray-200';
+                        }
                     } else {
-                        detailContainer.classList.remove('opacity-40');
+                        detailContainer.classList.remove('opacity-40', 'pointer-events-none');
+                        if (badgeStatus) {
+                            badgeStatus.textContent = 'Kriteria Penilaian Ekonomi Aktif';
+                            badgeStatus.className = 'text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200';
+                        }
                     }
                 }
             }
@@ -486,84 +508,6 @@ echo $style_css;
                 }
             }
 
-<<<<<<< HEAD
-=======
-            function modalTambahProdiMhs() {
-                Swal.fire({
-                    title: 'Tambah Program Studi Baru',
-                    text: 'Program studi baru akan disimpan ke database dan langsung aktif di pilihan form:',
-                    input: 'text',
-                    inputPlaceholder: 'Contoh: S1 Desain Komunikasi Visual',
-                    showCancelButton: true,
-                    confirmButtonText: 'Simpan',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#9333ea',
-                    cancelButtonColor: '#6b7280',
-                    inputValidator: (value) => {
-                        if (!value || !value.trim()) {
-                            return 'Nama program studi tidak boleh kosong!';
-                        }
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const formData = new FormData();
-                        formData.append('aksi', 'tambah_prodi');
-                        formData.append('nama_program', result.value.trim());
-
-                        fetch('mahasiswa.php?page=mahasiswa&aksi=<?= htmlspecialchars($aksi) ?>', {
-                            method: 'POST',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: formData
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                const select = document.getElementById('selectProdiTujuan');
-                                if (select) {
-                                    const opt = document.createElement('option');
-                                    opt.value = data.nama_program;
-                                    opt.textContent = data.nama_program;
-                                    opt.selected = true;
-                                    select.appendChild(opt);
-                                }
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil!',
-                                    text: data.message,
-                                    confirmButtonColor: '#9333ea',
-                                    timer: 2000
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal!',
-                                    text: data.message,
-                                    confirmButtonColor: '#9333ea'
-                                });
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Kesalahan Sistem',
-                                text: 'Gagal menghubungi server.',
-                                confirmButtonColor: '#9333ea'
-                            });
-                        });
-                    }
-                });
-            }
-
-            function syncPenghasilanInput() {
-                const select = document.getElementById('penghasilanSelect');
-                const input = document.getElementById('penghasilanInput');
-                input.value = select.value;
-            }
-
->>>>>>> 1f64e65181a53b16a4e5858520c3a46086be9ff0
             function goToStep(step) {
                 document.getElementById('section-step-1').classList.add('hidden');
                 document.getElementById('section-step-2').classList.add('hidden');
@@ -964,145 +908,454 @@ echo $style_css;
             </div>
         </div>
 
-        <div class="table-card w-full">
-            <div class="table-card-header">
-                <div class="table-card-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span><?= $jenis === 'mahasiswa' ? 'Daftar Mahasiswa Resmi (Lolos)' : 'Daftar Calon Mahasiswa (Camaba)' ?></span>
-                    <span id="counterData" class="table-badge-counter"><?= $totalData ?> Data</span>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Tampilkan:</span>
-                    <select id="limitSelect" class="bg-white border border-gray-200 text-gray-700 text-xs rounded-md focus:ring-purple-500 focus:border-purple-500 p-1.5 shadow-sm font-medium">
-                        <option value="10" <?= $limit == 10 ? 'selected' : '' ?>>10 Baris</option>
-                        <option value="20" <?= $limit == 20 ? 'selected' : '' ?>>20 Baris</option>
-                        <option value="30" <?= $limit == 30 ? 'selected' : '' ?>>30 Baris</option>
-                        <option value="50" <?= $limit == 50 ? 'selected' : '' ?>>50 Baris</option>
-                    </select>
-                </div>
-            </div>
+        <!-- ==================== TABEL + DETAIL PANEL ==================== -->
+        <?php
+            $allData = [];
+            foreach ($filtered_list as $item) {
+                $allData[] = [
+                    'id'       => $item['id'],
+                    'nama'     => $item['nama'],
+                    'nim'      => $item['nim'] ?? '-',
+                    'prodi'    => $item['prodi'] ?? '-',
+                    'golongan' => $item['golongan'] ?? 'Umum',
+                    'tahun'    => $item['tahun'] ?? '-',
+                    'status'   => $item['status'] ?? 'Menunggu',
+                    'detail'   => $item['detail'] ?? [],
+                    'nilai'    => isset($nilai_raw_mhs[$item['id']]) ? $nilai_raw_mhs[$item['id']] : [],
+                ];
+            }
+            $kriteriaLabels = [];
+            foreach ($kriteria_db as $idK => $krit) {
+                $kriteriaLabels[$idK] = [
+                    'nama'  => $krit['nama_kriteria'],
+                    'bobot' => $krit['wj'] ?? 0,
+                    'subs'  => $krit['subs'] ?? [],
+                ];
+            }
+        ?>
 
-            <div class="table-scroll-container">
-                <table class="custom-table" id="tableMahasiswa">
-                    <thead>
-                        <tr>
-                            <th class="w-16 text-center">NO</th>
-                            <th>NAMA MAHASISWA</th>
-                            <th>PROGRAM STUDI</th>
-                            <th class="w-28 text-center">GOLONGAN</th>
-                            <th class="w-24 text-center">TAHUN</th>
-                            <th class="w-32 text-center">STATUS</th>
-                            <th class="w-28 text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <?php 
-                        $no = $offset + 1;
-                        if (!empty($paginated_list)):
-                            foreach ($paginated_list as $item): 
-                                $id = $item['id'];
-                                $status = $item['status'] ?? 'Menunggu';
-                                
-                                if ($status === 'Diterima') $status_class = 'diterima';
-                                elseif ($status === 'Ditolak') $status_class = 'tidak-diterima';
-                                else $status_class = 'bg-blue-100 text-blue-700 border border-blue-200';
+        <style>
+            /* ---- Transition wrapper ---- */
+            #mainPanelWrapper {
+                display: flex;
+                gap: 1rem;
+                align-items: flex-start;
+                width: 100%;
+            }
 
-                                $golongan = $item['golongan'] ?? 'Umum';
-                        ?>
-                            <tr class="data-row">
-                                <td class="text-center font-semibold text-gray-500"><?= $no++ ?></td>
-                                <td>
-                                    <div class="font-semibold text-gray-900 leading-snug"><?= htmlspecialchars($item['nama']) ?></div>
-                                    <div class="text-xs text-gray-400 mt-0.5">NIM: <?= htmlspecialchars($item['nim'] ?? '-') ?></div>
-                                </td>
-                                <td><span class="inline-flex px-2.5 py-1 text-xs font-medium text-purple-700"><?= htmlspecialchars($item['prodi']) ?></span></td>
-                                <td class="text-center"><span class="inline-flex px-2.5 py-1 rounded text-xs border bg-gray-50 text-gray-600 border-gray-200"><?= htmlspecialchars($golongan) ?></span></td>
-                                <td class="text-center font-medium text-gray-600"><?= htmlspecialchars($item['tahun']) ?></td>
-                                <td class="text-center"><span class="status-pill <?= $status_class ?>"><?= htmlspecialchars($status) ?></span></td>
-                                <td class="text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="mahasiswa.php?page=mahasiswa&aksi=edit&id=<?= $id ?>&jenis=<?= $jenis ?>" class="p-1.5 text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors" title="Edit Data">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </a>
-                                        <a href="mahasiswa.php?page=mahasiswa&aksi=hapus&id=<?= $id ?>&jenis=<?= $jenis ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');" class="p-1.5 text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors" title="Hapus Data">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php 
-                            endforeach;
-                        else: 
-                        ?>
-                            <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400 italic">Data tidak ditemukan.</td></tr>
+            /* ---- Table panel ---- */
+            #tablePanel {
+                flex: 1 1 100%;
+                min-width: 0;
+                transition: flex 0.4s cubic-bezier(0.4,0,0.2,1), max-width 0.4s cubic-bezier(0.4,0,0.2,1);
+                max-width: 100%;
+                overflow: hidden;
+            }
+            #mainPanelWrapper.detail-open #tablePanel {
+                flex: 0 0 300px;
+                max-width: 300px;
+            }
+
+            /* ---- Detail panel ---- */
+            #detailPanel {
+                flex: 0 0 0px;
+                max-width: 0;
+                overflow: hidden;
+                transition: flex 0.4s cubic-bezier(0.4,0,0.2,1), max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+                opacity: 0;
+            }
+            #mainPanelWrapper.detail-open #detailPanel {
+                flex: 1 1 0;
+                max-width: 9999px;
+                opacity: 1;
+            }
+
+            /* ---- Compact table columns when panel is open ---- */
+            #mainPanelWrapper.detail-open .col-hide { display: none; }
+            #mainPanelWrapper.detail-open .col-prodi-text { display: none; }
+
+            /* ---- Data row hover ---- */
+            .data-row { cursor: pointer; transition: background 0.15s; }
+            .data-row:hover td { background: #f5f3ff; }
+            .data-row.active-row td { background: #ede9fe; }
+        </style>
+
+        <div id="mainPanelWrapper">
+
+            <!-- TABLE PANEL (full width by default) -->
+            <div id="tablePanel">
+                <div class="table-card w-full">
+                    <div class="table-card-header">
+                        <div class="table-card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span><?= $jenis === 'mahasiswa' ? 'Daftar Mahasiswa Resmi (Lolos)' : 'Daftar Calon Mahasiswa' ?></span>
+                            <span id="counterData" class="table-badge-counter"><?= $totalData ?> Data</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Tampilkan:</span>
+                            <select id="limitSelect" class="bg-white border border-gray-200 text-gray-700 text-xs rounded-md focus:ring-purple-500 focus:border-purple-500 p-1.5 shadow-sm font-medium">
+                                <option value="10" <?= $limit == 10 ? 'selected' : '' ?>>10</option>
+                                <option value="20" <?= $limit == 20 ? 'selected' : '' ?>>20</option>
+                                <option value="30" <?= $limit == 30 ? 'selected' : '' ?>>30</option>
+                                <option value="50" <?= $limit == 50 ? 'selected' : '' ?>>50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll-container">
+                        <table class="custom-table" id="tableMahasiswa">
+                            <thead>
+                                <tr>
+                                    <th class="w-10 text-center">NO</th>
+                                    <th>NAMA MAHASISWA</th>
+                                    <th class="col-hide">PROGRAM STUDI</th>
+                                    <th class="w-24 text-center col-hide">GOLONGAN</th>
+                                    <th class="w-20 text-center col-hide">TAHUN</th>
+                                    <th class="w-28 text-center">STATUS</th>
+                                    <th class="w-24 text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <?php
+                                $no = $offset + 1;
+                                if (!empty($paginated_list)):
+                                    foreach ($paginated_list as $item):
+                                        $id     = $item['id'];
+                                        $status = $item['status'] ?? 'Menunggu';
+                                        if ($status === 'Diterima')     $status_class = 'diterima';
+                                        elseif ($status === 'Ditolak')  $status_class = 'tidak-diterima';
+                                        else                            $status_class = 'bg-blue-100 text-blue-700 border border-blue-200';
+                                        $golongan = $item['golongan'] ?? 'Umum';
+                                ?>
+                                <tr class="data-row" data-id="<?= $id ?>" onclick="showDetail(<?= $id ?>)">
+                                    <td class="text-center font-semibold text-gray-400 text-xs"><?= $no++ ?></td>
+                                    <td>
+                                        <div class="font-semibold text-gray-900 leading-snug text-sm"><?= htmlspecialchars($item['nama']) ?></div>
+                                        <div class="text-xs text-gray-400 mt-0.5">NIM: <?= htmlspecialchars($item['nim'] ?? '-') ?></div>
+                                    </td>
+                                    <td class="col-hide"><span class="text-xs font-medium text-purple-700"><?= htmlspecialchars($item['prodi']) ?></span></td>
+                                    <td class="text-center col-hide"><span class="inline-flex px-2 py-0.5 rounded text-xs border bg-gray-50 text-gray-600 border-gray-200"><?= htmlspecialchars($golongan) ?></span></td>
+                                    <td class="text-center col-hide font-medium text-gray-600 text-sm"><?= htmlspecialchars($item['tahun']) ?></td>
+                                    <td class="text-center"><span class="status-pill <?= $status_class ?>"><?= htmlspecialchars($status) ?></span></td>
+                                    <td class="text-center" onclick="event.stopPropagation()">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <a href="mahasiswa.php?page=mahasiswa&aksi=edit&id=<?= $id ?>&jenis=<?= $jenis ?>" class="p-1.5 text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors" title="Edit">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                            </a>
+                                            <a href="mahasiswa.php?page=mahasiswa&aksi=hapus&id=<?= $id ?>&jenis=<?= $jenis ?>" onclick="return confirm('Yakin hapus data ini?');" class="p-1.5 text-red-500 bg-red-50 rounded hover:bg-red-100 transition-colors" title="Hapus">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; else: ?>
+                                <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400 italic">Data tidak ditemukan.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="paginationContainer" class="p-4 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white rounded-b-xl">
+                        <span class="text-sm text-gray-500 font-medium">
+                            Menampilkan <span class="font-bold text-gray-900"><?= $totalData > 0 ? $offset + 1 : 0 ?></span>
+                            &ndash; <span class="font-bold text-gray-900"><?= min($offset + $limit, $totalData) ?></span>
+                            dari <span class="font-bold text-gray-900"><?= $totalData ?></span> data
+                        </span>
+                        <?php if ($totalPages > 1): ?>
+                        <div class="flex items-center space-x-1">
+                            <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= max(1,$halaman-1) ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 <?= $halaman<=1?'pointer-events-none opacity-50':'' ?>">Sebelumnya</a>
+                            <?php for($i=1;$i<=$totalPages;$i++): ?>
+                            <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= $i ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors <?= $halaman==$i?'bg-purple-50 text-purple-700 border-purple-200':'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' ?>"><?= $i ?></a>
+                            <?php endfor; ?>
+                            <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= min($totalPages,$halaman+1) ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 <?= $halaman>=$totalPages?'pointer-events-none opacity-50':'' ?>">Selanjutnya</a>
+                        </div>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                    </div>
+                </div><!-- /table-card -->
+            </div><!-- /tablePanel -->
 
-            <div id="paginationContainer" class="p-4 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white rounded-b-xl">
-                <span class="text-sm text-gray-500 font-medium">
-                    Menampilkan <span class="font-bold text-gray-900"><?= $totalData > 0 ? $offset + 1 : 0 ?></span> 
-                    sampai <span class="font-bold text-gray-900"><?= min($offset + $limit, $totalData) ?></span> dari <span class="font-bold text-gray-900"><?= $totalData ?></span> data
-                </span>
-                <?php if ($totalPages > 1): ?>
-                <div class="flex items-center space-x-1">
-                    <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= max(1, $halaman - 1) ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 <?= $halaman <= 1 ? 'pointer-events-none opacity-50' : '' ?>">Sebelumnya</a>
-                    <?php for($i = 1; $i <= $totalPages; $i++): ?>
-                        <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= $i ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors <?= $halaman == $i ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' ?>"><?= $i ?></a>
-                    <?php endfor; ?>
-                    <a href="mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>&hal=<?= min($totalPages, $halaman + 1) ?>&limit=<?= $limit ?>&search=<?= urlencode($search) ?>&prodi=<?= urlencode($filter_prodi) ?>&tahun=<?= urlencode($filter_tahun) ?>&status=<?= urlencode($filter_status) ?>" class="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 <?= $halaman >= $totalPages ? 'pointer-events-none opacity-50' : '' ?>">Selanjutnya</a>
+            <!-- DETAIL PANEL (hidden, slides in from right) -->
+            <div id="detailPanel">
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" style="min-width:500px;">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/70">
+                        <div class="flex items-center gap-3">
+                            <div id="detailAvatar" class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold text-base flex items-center justify-center shrink-0"></div>
+                            <div>
+                                <div id="detailNama" class="font-bold text-gray-900 text-sm leading-snug"></div>
+                                <div id="detailSubheader" class="text-[11px] text-gray-500 mt-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span id="detailStatusPill" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                            <a id="detailEditBtn" href="#" class="text-xs font-medium px-2.5 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                Edit
+                            </a>
+                            <button onclick="closeDetail()" class="text-gray-400 hover:text-gray-600 p-1 rounded transition-colors" title="Tutup">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-3">
+                        <!-- Identitas -->
+                        <div class="border border-gray-100 rounded-xl p-4 bg-white">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-3 pb-2 border-b border-gray-100">
+                                <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Identitas Lengkap
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">NIM</div><div id="dNim" class="font-mono font-semibold text-gray-800 text-[11px]"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">NIK (KTP/KK)</div><div id="dNik" class="font-mono font-semibold text-gray-800 text-[11px]"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Jenis Kelamin</div><div id="dJK" class="text-gray-700"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Tempat, Tgl Lahir</div><div id="dTTL" class="text-gray-700"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Asal Sekolah</div><div id="dSekolah" class="text-gray-700"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Program Studi</div><div id="dProdi" class="text-purple-700 font-semibold"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">No. HP</div><div id="dHp" class="text-gray-700"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Email</div><div id="dEmail" class="text-blue-600 break-all text-[10px]"></div></div>
+                                <div class="col-span-2"><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Alamat</div><div id="dAlamat" class="text-gray-700"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- Rincian Nilai -->
+                        <div class="border border-gray-100 rounded-xl p-4 bg-white">
+                            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    Rincian Nilai
+                                </div>
+                                <span id="dRanking" class="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full hidden"></span>
+                            </div>
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="text-gray-400 text-[10px] uppercase tracking-wider border-b border-gray-100">
+                                        <th class="text-left pb-1.5 font-semibold">Kriteria</th>
+                                        <th class="text-center pb-1.5 font-semibold w-12">Bobot</th>
+                                        <th class="text-center pb-1.5 font-semibold w-12">Nilai</th>
+                                        <th class="text-left pb-1.5 font-semibold">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dNilaiBody">
+                                    <tr><td colspan="4" class="text-center text-gray-400 italic py-5 text-xs">Memuat data nilai...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-4 pb-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+                        <a id="detailDeleteBtn" href="#" onclick="return confirm('Yakin ingin menghapus data ini?');" class="text-xs font-medium px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Hapus Data
+                        </a>
+                    </div>
                 </div>
-                <?php endif; ?>
-            </div>
-        </div>
+            </div><!-- /detailPanel -->
 
+        </div><!-- /mainPanelWrapper -->
         <script>
-            let timeout = null;
-            const jenisVal = "<?= $jenis ?>";
-            const searchInput = document.getElementById('searchInput');
-            const limitSelect = document.getElementById('limitSelect');
-            const prodiSelect = document.getElementById('filterProdi');
-            const tahunSelect = document.getElementById('filterTahun');
-            const statusSelect = document.getElementById('filterStatus');
-            const tableBody = document.getElementById('tableBody');
-            const paginationContainer = document.getElementById('paginationContainer');
-            const counterData = document.getElementById('counterData');
+        (function () {
+            var jenisVal     = "<?= $jenis ?>";
+            var allData      = <?= json_encode(array_values($allData), JSON_UNESCAPED_UNICODE) ?>;
+            var kriteriaInfo = <?= json_encode($kriteriaLabels, JSON_UNESCAPED_UNICODE) ?>;
 
-            function fetchLiveResults() {
-                const searchVal = searchInput ? encodeURIComponent(searchInput.value) : '';
-                const limitVal = limitSelect ? limitSelect.value : 10;
-                const prodiVal = prodiSelect ? encodeURIComponent(prodiSelect.value) : '';
-                const tahunVal = tahunSelect ? encodeURIComponent(tahunSelect.value) : '';
-                const statusVal = statusSelect ? encodeURIComponent(statusSelect.value) : '';
-                
-                tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400 italic"><svg class="animate-spin w-8 h-8 mx-auto text-purple-500 mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Mencari data...</td></tr>';
-                
-                fetch(`mahasiswa.php?page=mahasiswa&jenis=${jenisVal}&search=${searchVal}&limit=${limitVal}&prodi=${prodiVal}&tahun=${tahunVal}&status=${statusVal}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        
-                        const newTbody = doc.getElementById('tableBody');
-                        if(newTbody) tableBody.innerHTML = newTbody.innerHTML;
-                        
-                        const newPagination = doc.getElementById('paginationContainer');
-                        if(newPagination && paginationContainer) paginationContainer.innerHTML = newPagination.innerHTML;
-                        
-                        const newCounter = doc.getElementById('counterData');
-                        if(newCounter && counterData) counterData.innerHTML = newCounter.innerHTML;
+            var wrapper      = document.getElementById('mainPanelWrapper');
+            var tableBody    = document.getElementById('tableBody');
+            var pagCont      = document.getElementById('paginationContainer');
+            var counterData  = document.getElementById('counterData');
+            var searchInput  = document.getElementById('searchInput');
+            var limitSelect  = document.getElementById('limitSelect');
+            var prodiSelect  = document.getElementById('filterProdi');
+            var tahunSelect  = document.getElementById('filterTahun');
+            var statusSelect = document.getElementById('filterStatus');
+            var fetchTimeout = null;
+
+            /* ---- attach klik baris tabel ---- */
+            function attachRowClicks() {
+                document.querySelectorAll('#tableBody .data-row').forEach(function (row) {
+                    row.onclick = function () { showDetail(parseInt(this.dataset.id, 10)); };
+                });
+            }
+
+            /* ---- live search/filter via fetch ---- */
+            function fetchLive() {
+                if (!tableBody) return;
+                var s  = searchInput  ? encodeURIComponent(searchInput.value)  : '';
+                var l  = limitSelect  ? limitSelect.value  : 10;
+                var p  = prodiSelect  ? encodeURIComponent(prodiSelect.value)  : '';
+                var t  = tahunSelect  ? encodeURIComponent(tahunSelect.value)  : '';
+                var st = statusSelect ? encodeURIComponent(statusSelect.value) : '';
+
+                tableBody.innerHTML =
+                    '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400 italic">'
+                    + '<svg class="animate-spin w-6 h-6 mx-auto text-purple-400 mb-2" fill="none" viewBox="0 0 24 24">'
+                    + '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>'
+                    + '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>'
+                    + '</svg>Memuat data...</td></tr>';
+
+                fetch('mahasiswa.php?page=mahasiswa&jenis=' + jenisVal
+                    + '&search=' + s + '&limit=' + l
+                    + '&prodi=' + p + '&tahun=' + t + '&status=' + st)
+                    .then(function (r) { return r.text(); })
+                    .then(function (html) {
+                        var doc = new DOMParser().parseFromString(html, 'text/html');
+                        var nb  = doc.getElementById('tableBody');
+                        if (nb) tableBody.innerHTML = nb.innerHTML;
+                        var np  = doc.getElementById('paginationContainer');
+                        if (np && pagCont) pagCont.innerHTML = np.innerHTML;
+                        var nc  = doc.getElementById('counterData');
+                        if (nc && counterData) counterData.innerHTML = nc.innerHTML;
+                        attachRowClicks();
                     });
             }
 
-            if(searchInput) searchInput.addEventListener('input', () => { clearTimeout(timeout); timeout = setTimeout(fetchLiveResults, 300); });
-            if(limitSelect) limitSelect.addEventListener('change', fetchLiveResults);
-            if(prodiSelect) prodiSelect.addEventListener('change', fetchLiveResults);
-            if(tahunSelect) tahunSelect.addEventListener('change', fetchLiveResults);
-            if(statusSelect) statusSelect.addEventListener('change', fetchLiveResults);
+            /* ---- show detail + animasi slide ---- */
+            function showDetail(id) {
+                var item = null;
+                for (var i = 0; i < allData.length; i++) {
+                    if (allData[i].id == id) { item = allData[i]; break; }
+                }
+                if (!item || !wrapper) return;
+
+                document.querySelectorAll('#tableBody .data-row').forEach(function (el) {
+                    el.classList.toggle('active-row', parseInt(el.dataset.id, 10) === id);
+                });
+
+                populateDetail(item);
+
+                if (!wrapper.classList.contains('detail-open')) {
+                    wrapper.classList.add('detail-open');
+                }
+            }
+
+            function populateDetail(item) {
+                var words = item.nama.trim().split(' ');
+                var initials = (words.map(function (w) { return w[0] || ''; }).slice(0, 2).join('')).toUpperCase();
+                var setT = function (elId, val) {
+                    var e = document.getElementById(elId);
+                    if (e) e.textContent = val || '-';
+                };
+
+                setT('detailAvatar',    initials);
+                setT('detailNama',      item.nama);
+                setT('detailSubheader', item.prodi + ' \u2022 Tahun ' + item.tahun + ' \u2022 NIM: ' + (item.nim || '-'));
+
+                var pill = document.getElementById('detailStatusPill');
+                if (pill) {
+                    pill.textContent = item.status;
+                    pill.className   = 'text-xs font-bold px-2.5 py-0.5 rounded-full '
+                        + (item.status === 'Diterima' ? 'bg-green-100 text-green-700'
+                        :  item.status === 'Ditolak'  ? 'bg-red-100 text-red-700'
+                        :                               'bg-blue-100 text-blue-700');
+                }
+
+                var editBtn = document.getElementById('detailEditBtn');
+                if (editBtn) editBtn.href = 'mahasiswa.php?page=mahasiswa&aksi=edit&id=' + item.id + '&jenis=' + jenisVal;
+                var delBtn = document.getElementById('detailDeleteBtn');
+                if (delBtn) delBtn.href  = 'mahasiswa.php?page=mahasiswa&aksi=hapus&id=' + item.id + '&jenis=' + jenisVal;
+
+                var d = item.detail || {};
+                setT('dNim',     item.nim);
+                setT('dNik',     d.nik);
+                var jk = d.jenis_kelamin;
+                setT('dJK',      jk === 'L' ? 'Laki-laki' : jk === 'P' ? 'Perempuan' : jk);
+                setT('dTTL',     d.tempat_tanggal_lahir);
+                setT('dSekolah', d.asal_sekolah);
+                setT('dProdi',   item.prodi);
+                setT('dHp',      d.no_hp);
+                setT('dEmail',   d.email);
+                setT('dAlamat',  d.alamat);
+
+                /* -- baris nilai -- */
+                var nilaiMap = item.nilai || {};
+                var rows = [];
+                var cNo  = 1;
+                for (var idK in kriteriaInfo) {
+                    var krit     = kriteriaInfo[idK];
+                    var entry    = nilaiMap[idK] || {};
+                    var idSub    = entry.id_sub;
+                    var nilaiVal = entry.nilai;
+                    var subLabel = '-';
+                    if (idSub && krit.subs) {
+                        for (var si = 0; si < krit.subs.length; si++) {
+                            if (krit.subs[si].id_sub == idSub) { subLabel = krit.subs[si].nama_sub; break; }
+                        }
+                    }
+                    var bobot = Math.round((krit.bobot || 0) * 100);
+                    var nd    = (nilaiVal !== undefined && nilaiVal !== null) ? nilaiVal : '-';
+                    var nc    = nilaiVal >= 85 ? 'font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded'
+                              : nilaiVal >= 70 ? 'font-semibold text-blue-700' : 'text-gray-600';
+                    rows.push(
+                        '<tr class="border-t border-gray-50">'
+                        + '<td class="py-1.5 pr-2 text-gray-700"><span class="text-purple-600 font-bold mr-0.5">C' + cNo + '</span>' + krit.nama + '</td>'
+                        + '<td class="text-center py-1.5 text-gray-500">' + bobot + '%</td>'
+                        + '<td class="text-center py-1.5"><span class="' + nc + '">' + nd + '</span></td>'
+                        + '<td class="py-1.5 text-gray-500 text-[10px]">' + subLabel + '</td>'
+                        + '</tr>'
+                    );
+                    cNo++;
+                }
+                var dNilaiBody = document.getElementById('dNilaiBody');
+                if (dNilaiBody) dNilaiBody.innerHTML = rows.length
+                    ? rows.join('')
+                    : '<tr><td colspan="4" class="text-center text-gray-400 italic py-5">Belum ada data nilai.</td></tr>';
+
+                /* -- ranking -- */
+                var withNilai = allData.filter(function (x) { return x.nilai && Object.keys(x.nilai).length > 0; });
+                withNilai.sort(function (a, b) { return calcScore(b.nilai) - calcScore(a.nilai); });
+                var rank = -1;
+                for (var ri = 0; ri < withNilai.length; ri++) {
+                    if (withNilai[ri].id == item.id) { rank = ri + 1; break; }
+                }
+                var dRank = document.getElementById('dRanking');
+                if (dRank) {
+                    if (rank > 0) { dRank.textContent = 'Ranking #' + rank; dRank.classList.remove('hidden'); }
+                    else           { dRank.classList.add('hidden'); }
+                }
+            }
+
+            function calcScore(nm) {
+                var s = 1;
+                for (var idK in kriteriaInfo) {
+                    var krit = kriteriaInfo[idK];
+                    var val  = (nm[idK] && nm[idK].nilai) ? nm[idK].nilai : 1;
+                    s *= Math.pow(val > 0 ? val : 1, krit.bobot || 0);
+                }
+                return s;
+            }
+
+            function closeDetail() {
+                if (!wrapper) return;
+                wrapper.classList.remove('detail-open');
+                document.querySelectorAll('#tableBody .data-row').forEach(function (el) {
+                    el.classList.remove('active-row');
+                });
+            }
+
+            /* expose ke HTML onclick */
+            window.showDetail  = showDetail;
+            window.closeDetail = closeDetail;
+
+            /* pasang event listener filter */
+            if (searchInput)  searchInput.addEventListener('input',  function () { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(fetchLive, 300); });
+            if (limitSelect)  limitSelect.addEventListener('change', fetchLive);
+            if (prodiSelect)  prodiSelect.addEventListener('change', fetchLive);
+            if (tahunSelect)  tahunSelect.addEventListener('change', fetchLive);
+            if (statusSelect) statusSelect.addEventListener('change', fetchLive);
+
+            /* pasang klik baris awal */
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', attachRowClicks);
+            } else {
+                attachRowClicks();
+            }
+
+        }());
         </script>
     <?php endif; ?>
 </main>
