@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // app/pages/mahasiswa.php
 require_once __DIR__ . '/../controllers/MahasiswaController.php';
 
@@ -906,7 +906,7 @@ echo $style_css;
                     fieldEl.value = `Total Skor: ${totalScoreFmt} | Nilai Akhir Terbobot (SPK): ${weightedPercent}% (Rata-rata: ${avgScoreFmt})`;
                     if (badgeEl) {
                         badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
-                        badgeEl.textContent = '✓ Lengkap: Semua Kriteria Terisi';
+                        badgeEl.textContent = 'Γ£ô Lengkap: Semua Kriteria Terisi';
                     }
                 }
 
@@ -1050,16 +1050,16 @@ echo $style_css;
 
                     let perbedaan = [];
                     if (!isGenderMatch) {
-                        perbedaan.push(`â€¢ <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
+                        perbedaan.push(`├óΓé¼┬ó <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
                     }
                     if (!isDayMatch) {
-                        perbedaan.push(`â€¢ <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
+                        perbedaan.push(`├óΓé¼┬ó <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
                     }
                     if (!isMonthMatch) {
-                        perbedaan.push(`â€¢ <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
+                        perbedaan.push(`├óΓé¼┬ó <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
                     }
                     if (!isYearMatch) {
-                        perbedaan.push(`â€¢ <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
+                        perbedaan.push(`├óΓé¼┬ó <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
                     }
 
                     return {
@@ -1114,7 +1114,7 @@ echo $style_css;
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-emerald-600 font-semibold";
-                        tglMsg.textContent = "âœ“ Sesuai dengan 6 digit tanggal NIK";
+                        tglMsg.textContent = "├ó┼ôΓÇ£ Sesuai dengan 6 digit tanggal NIK";
                         tglMsg.classList.remove('hidden');
                     } else {
                         nikMsg.className = "text-xs mt-1 text-rose-500 font-semibold flex items-center gap-1";
@@ -1122,12 +1122,12 @@ echo $style_css;
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-rose-500 font-semibold";
-                        tglMsg.textContent = "âš  Tanggal lahir belum sesuai dengan 6 digit NIK";
+                        tglMsg.textContent = "├ó┼í┬á Tanggal lahir belum sesuai dengan 6 digit NIK";
                         tglMsg.classList.remove('hidden');
                     }
                 } else if (nik.length === 16) {
                     nikMsg.className = "text-xs mt-1 text-purple-600 font-medium";
-                    nikMsg.textContent = "âœ“ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
+                    nikMsg.textContent = "├ó┼ôΓÇ£ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
                     nikMsg.classList.remove('hidden');
                     tglMsg.classList.add('hidden');
                 }
@@ -1199,9 +1199,9 @@ echo $style_css;
                     htmlMsg += `
                         <div class="p-3 text-xs text-left bg-gray-50 text-gray-600 border border-gray-200 rounded-lg space-y-1">
                             <div class="font-bold text-gray-800 border-b border-gray-200 pb-1 mb-1">Ketentuan Format 16 Digit NIK:</div>
-                            <div>• <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
-                            <div>• <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
-                            <div>• <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
+                            <div>ΓÇó <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
+                            <div>ΓÇó <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
+                            <div>ΓÇó <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
                         </div>
                     `;
 
@@ -1258,7 +1258,7 @@ echo $style_css;
                         title: 'Nilai Penilaian Belum Lengkap',
                         html: '<div class="text-left text-sm text-gray-700 mb-2">Silakan periksa kembali nilai yang Anda input pada Proses 2:</div>'
                             + '<div class="p-3 text-xs text-left bg-amber-50 text-amber-900 border border-amber-200 rounded-lg leading-relaxed space-y-1 font-medium">'
-                            + '• ' + missing.join('<br>• ')
+                            + 'ΓÇó ' + missing.join('<br>ΓÇó ')
                             + '</div>',
                         confirmButtonColor: '#9333ea'
                     });

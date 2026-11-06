@@ -56,16 +56,8 @@ class MahasiswaController {
             } elseif ($tgl_lahir !== '') {
                 $ttl = $tgl_lahir;
             }
-
-            $golongan = $_POST['golongan'] ?? 'Umum';
-            if (isset($_POST['ajukan_beasiswa'])) {
-                $golongan = ($_POST['ajukan_beasiswa'] === 'Beasiswa') ? 'Beasiswa' : 'Umum';
-            }
-
             $mhsData = [
-                'nim'      => trim($_POST['nim'] ?? ''),
                 'nama'     => $_POST['nama'] ?? '',
-                'golongan' => $golongan
             ];
             $detailData = [
                 'nik'                  => trim($_POST['nik'] ?? ''),
@@ -76,14 +68,6 @@ class MahasiswaController {
                 'no_hp'                => $_POST['no_hp'] ?? '',
                 'email'                => $_POST['email'] ?? '',
                 'alamat'               => $_POST['alamat'] ?? '',
-                'penghasilan_orangtua' => $_POST['penghasilan_orangtua'] ?? '',
-                'pekerjaan_ayah'       => trim($_POST['pekerjaan_ayah'] ?? '-'),
-                'pekerjaan_ibu'        => trim($_POST['pekerjaan_ibu'] ?? '-'),
-                'penghasilan_ayah'     => trim($_POST['penghasilan_ayah'] ?? '-'),
-                'penghasilan_ibu'      => trim($_POST['penghasilan_ibu'] ?? '-'),
-                'aset_kendaraan'       => trim($_POST['aset_kendaraan'] ?? '-'),
-                'aset_bangunan'        => trim($_POST['aset_bangunan'] ?? '-'),
-                'uang_makan_harian'    => trim($_POST['uang_makan_harian'] ?? '-')
             ];
             $nilaiKriteria = [
                 'kriteria_sub'   => $_POST['kriteria_sub'] ?? [],
