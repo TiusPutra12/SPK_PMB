@@ -63,16 +63,7 @@ echo $style_css;
             $isEdit = ($aksi === 'edit');
             $id = $isEdit ? (int)$_GET['id'] : 0;
             $data = $isEdit ? ($mhsCtrl->getMahasiswaDetail($id) ?? []) : [];
-            $golongan_val = $data['golongan'] ?? 'Beasiswa';
             $editNilai = $nilai_raw_mhs[$id] ?? [];
-            $penghasilan_val = $data['penghasilan_orangtua'] ?? '';
-            $pekerjaan_ayah_val = $data['pekerjaan_ayah'] ?? '';
-            $pekerjaan_ibu_val = $data['pekerjaan_ibu'] ?? '';
-            $penghasilan_ayah_val = $data['penghasilan_ayah'] ?? '';
-            $penghasilan_ibu_val = $data['penghasilan_ibu'] ?? '';
-            $aset_kendaraan_val = $data['aset_kendaraan'] ?? '';
-            $aset_bangunan_val = $data['aset_bangunan'] ?? '';
-            $uang_makan_val = $data['uang_makan_harian'] ?? '';
 
             // Menentukan kriteria mana yang diinput manual (C1: Nilai Rapor, C4: Nilai TKA, C5: Skor Bahasa Inggris)
             $manual_kriteria_ids = [];
@@ -112,23 +103,17 @@ echo $style_css;
         <div class="mb-8 max-w-4xl mx-auto">
             <div class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm">
                 <!-- UI Progress Tracker -->
-                <div class="flex items-center justify-between w-full relative">
+                <div class="flex items-center justify-between w-full relative max-w-md mx-auto">
                     <div class="flex flex-col items-center relative z-10 cursor-pointer" onclick="goToStep(1)">
                         <div id="step-node-1" class="w-12 h-12 rounded-full border-4 border-purple-600 bg-purple-600 text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300">1</div>
                         <span id="step-label-1" class="text-xs font-bold text-purple-700 mt-2 text-center transition-colors">Data Diri</span>
                     </div>
                     
-                    <div class="flex-1 h-1 mx-2 sm:mx-4 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-1" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
+                    <div class="flex-1 h-1 mx-4 sm:mx-8 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-1" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
                     
                     <div class="flex flex-col items-center relative z-10 cursor-pointer" onclick="validateAndGoStep(2)">
                         <div id="step-node-2" class="w-12 h-12 rounded-full border-4 border-gray-300 bg-white text-gray-500 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300">2</div>
                         <span id="step-label-2" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Input Nilai</span>
-                    </div>
-                    
-                    <div id="tracker-line-3" class="flex-1 h-1 mx-2 sm:mx-4 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-2" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
-                    <div id="tracker-node-3" class="flex flex-col items-center relative z-10 cursor-pointer" onclick="validateAndGoStep(3)">
-                        <div id="step-node-3" class="w-12 h-12 rounded-full border-4 border-gray-300 bg-white text-gray-500 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300">3</div>
-                        <span id="step-label-3" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Pengajuan Beasiswa</span>
                     </div>
                 </div>
             </div>
@@ -142,8 +127,7 @@ echo $style_css;
                         <input type="hidden" name="id_mahasiswa" value="<?= $data['id_mahasiswa'] ?>">
                         <input type="hidden" name="status" value="<?= htmlspecialchars($data['status'] ?? 'Menunggu') ?>">
                     <?php endif; ?>
-                    <input type="hidden" name="nim" value="<?= htmlspecialchars($data['nim'] ?? '') ?>">
-                    <input type="hidden" id="golonganInput" name="golongan" value="<?= htmlspecialchars($golongan_val) ?>">
+                    
 
                     <div id="section-step-1" class="space-y-6">
                         <div class="p-6 border border-purple-300 rounded-xl bg-purple-50/20">
@@ -363,269 +347,18 @@ echo $style_css;
 
                         <div class="flex justify-between items-center pt-2 gap-3 flex-wrap">
                             <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali ke Data Diri</button>
-                            <div class="flex items-center gap-3">
-                                <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" onclick="setGolonganUmumDirect()" class="px-6 py-3 bg-white border-2 border-purple-600 text-purple-700 font-bold rounded-lg hover:bg-purple-50 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <span>Simpan (Jalur Reguler / Tanpa Beasiswa)</span>
-                                </button>
-                                <button type="button" id="btnLanjutKe3" onclick="validateAndGoStep(3)" class="px-7 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer">
-                                    <span>Lanjut ke Proses 3: Pengajuan Beasiswa</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="section-step-3" class="space-y-6 hidden">
-                        <div class="p-6 border border-amber-300 rounded-xl bg-amber-50/20">
-                            <div class="flex items-center justify-between pb-4 border-b border-amber-200 mb-5">
-                                <h3 class="text-sm font-bold uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span> 
-                                    PROSES 3: PENGAJUAN BEASISWA & DATA SOSIAL EKONOMI
-                                </h3>
-                                <span id="badgeStatusBeasiswa" class="text-xs font-semibold <?= $golongan_val === "Umum" ? "bg-gray-100 text-gray-600 border-gray-200" : "bg-amber-100 text-amber-800 border-amber-200" ?> px-3 py-1 rounded-full border"><?= $golongan_val === "Umum" ? "Jalur Reguler / Tanpa Beasiswa (Opsional)" : "Kriteria Penilaian Ekonomi" ?></span>
-                            </div>
-
-                            <!-- Opsi Jalur Pengajuan Beasiswa -->
-                            <div class="p-4 bg-white border border-amber-200 rounded-xl mb-6 shadow-sm">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                    <div>
-                                        <h4 class="font-bold text-gray-800 text-sm">Status Pengajuan Jalur Beasiswa</h4>
-                                        <p class="text-xs text-gray-500 mt-0.5">Pilih apakah calon mahasiswa ini mendaftar melalui jalur seleksi beasiswa atau reguler/umum.</p>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <label class="inline-flex items-center cursor-pointer">
-                                            <input type="radio" name="ajukan_beasiswa" value="Beasiswa" <?= $golongan_val !== 'Umum' ? 'checked' : '' ?> onchange="updateGolonganFromRadio(this.value)" class="text-amber-600 focus:ring-amber-500 w-4 h-4">
-                                            <span class="ml-2 text-sm font-bold text-amber-900">Ajukan Beasiswa</span>
-                                        </label>
-                                        <label class="inline-flex items-center cursor-pointer">
-                                            <input type="radio" name="ajukan_beasiswa" value="Umum" <?= $golongan_val === 'Umum' ? 'checked' : '' ?> onchange="updateGolonganFromRadio(this.value)" class="text-purple-600 focus:ring-purple-500 w-4 h-4">
-                                            <span class="ml-2 text-sm font-medium text-gray-700">Jalur Reguler (Umum)</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Formulir Rincian Beasiswa -->
-                            <div id="containerDetailBeasiswa" class="space-y-6 <?= $golongan_val === "Umum" ? "opacity-40 pointer-events-none" : "" ?>">
-                                <!-- 1. Pekerjaan & Penghasilan Orang Tua (Ayah dan Ibu) -->
-                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
-                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                        <span>1. Pekerjaan & Penghasilan Orang Tua (Ayah dan Ibu)</span>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                                        <!-- Ayah -->
-                                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3">
-                                            <div class="font-bold text-xs uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-purple-600"></span> Data Ayah
-                                            </div>
-                                            <div class="filter-item">
-                                                <label class="filter-label">Pekerjaan Ayah</label>
-                                                <select name="pekerjaan_ayah" class="filter-select w-full bg-white">
-                                                    <option value="">-- Pilih Pekerjaan Ayah --</option>
-                                                    <?php 
-                                                        $jobs_ayah = ['PNS / TNI / Polri', 'Pegawai BUMN / BUMD', 'Karyawan Swasta', 'Wiraswasta / Pedagang', 'Petani / Peternak / Nelayan', 'Buruh Harian Lepas', 'Pensiunan', 'Tidak Bekerja / Meninggal Dunia', 'Lainnya'];
-                                                        foreach ($jobs_ayah as $job):
-                                                    ?>
-                                                        <option value="<?= htmlspecialchars($job) ?>" <?= $pekerjaan_ayah_val === $job ? 'selected' : '' ?>><?= htmlspecialchars($job) ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="filter-item">
-                                                <label class="filter-label">Gaji / Penghasilan Ayah per Bulan</label>
-                                                <select name="penghasilan_ayah" id="penghasilanAyah" onchange="autoCalculatePenghasilan()" class="filter-select w-full bg-white">
-                                                    <option value="">-- Pilih Penghasilan Ayah --</option>
-                                                    <option value="Tidak Ada" <?= $penghasilan_ayah_val === 'Tidak Ada' ? 'selected' : '' ?>>Tidak Ada / Rp 0</option>
-                                                    <option value="< Rp 1.500.000" <?= strpos($penghasilan_ayah_val, '< Rp 1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan</option>
-                                                    <option value="Rp 1.500.000 - Rp 3.000.000" <?= strpos($penghasilan_ayah_val, '1.500.000 - Rp 3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan</option>
-                                                    <option value="Rp 3.000.000 - Rp 5.000.000" <?= strpos($penghasilan_ayah_val, '3.000.000 - Rp 5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan</option>
-                                                    <option value="> Rp 5.000.000" <?= strpos($penghasilan_ayah_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <!-- Ibu -->
-                                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3">
-                                            <div class="font-bold text-xs uppercase tracking-wider text-pink-900 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-pink-500"></span> Data Ibu
-                                            </div>
-                                            <div class="filter-item">
-                                                <label class="filter-label">Pekerjaan Ibu</label>
-                                                <select name="pekerjaan_ibu" class="filter-select w-full bg-white">
-                                                    <option value="">-- Pilih Pekerjaan Ibu --</option>
-                                                    <?php 
-                                                        $jobs_ibu = ['Ibu Rumah Tangga (IRT)', 'PNS / TNI / Polri', 'Pegawai BUMN / BUMD', 'Karyawan Swasta', 'Wiraswasta / Pedagang', 'Petani / Peternak / Nelayan', 'Buruh Harian Lepas', 'Pensiunan', 'Tidak Bekerja / Meninggal Dunia', 'Lainnya'];
-                                                        foreach ($jobs_ibu as $job):
-                                                    ?>
-                                                        <option value="<?= htmlspecialchars($job) ?>" <?= $pekerjaan_ibu_val === $job ? 'selected' : '' ?>><?= htmlspecialchars($job) ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="filter-item">
-                                                <label class="filter-label">Gaji / Penghasilan Ibu per Bulan</label>
-                                                <select name="penghasilan_ibu" id="penghasilanIbu" onchange="autoCalculatePenghasilan()" class="filter-select w-full bg-white">
-                                                    <option value="">-- Pilih Penghasilan Ibu --</option>
-                                                    <option value="Tidak Ada" <?= $penghasilan_ibu_val === 'Tidak Ada' ? 'selected' : '' ?>>Tidak Ada / Rp 0 (IRT)</option>
-                                                    <option value="< Rp 1.500.000" <?= strpos($penghasilan_ibu_val, '< Rp 1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan</option>
-                                                    <option value="Rp 1.500.000 - Rp 3.000.000" <?= strpos($penghasilan_ibu_val, '1.500.000 - Rp 3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan</option>
-                                                    <option value="Rp 3.000.000 - Rp 5.000.000" <?= strpos($penghasilan_ibu_val, '3.000.000 - Rp 5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan</option>
-                                                    <option value="> Rp 5.000.000" <?= strpos($penghasilan_ibu_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Total Penghasilan Gabungan (Untuk Naive Bayes) -->
-                                    <div class="filter-item">
-                                        <label class="filter-label">Total Penghasilan Orang Tua Gabungan (Dasar Analisis Klasifikasi Naive Bayes)</label>
-                                        <select name="penghasilan_orangtua" id="penghasilanSelect" class="filter-select w-full bg-white">
-                                            <option value="">-- Pilih Kisaran Total Penghasilan Gabungan --</option>
-                                            <option value="< Rp 1.500.000 / bulan" <?= strpos($penghasilan_val, '1.500.000') !== false ? 'selected' : '' ?>>&lt; Rp 1.500.000 / bulan (Rendah / Prioritas Beasiswa)</option>
-                                            <option value="Rp 1.500.000 - Rp 3.000.000 / bulan" <?= strpos($penghasilan_val, '3.000.000') !== false ? 'selected' : '' ?>>Rp 1.500.000 - Rp 3.000.000 / bulan (Sedang / Layak)</option>
-                                            <option value="Rp 3.000.000 - Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '5.000.000') !== false ? 'selected' : '' ?>>Rp 3.000.000 - Rp 5.000.000 / bulan (Menengah)</option>
-                                            <option value="> Rp 5.000.000 / bulan" <?= strpos($penghasilan_val, '> Rp 5.000.000') !== false ? 'selected' : '' ?>>&gt; Rp 5.000.000 / bulan (Mampu)</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 2. Aset Keluarga -->
-                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
-                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                        <span>2. Aset Keluarga (Kendaraan & Bangunan Tempat Tinggal)</span>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="filter-item">
-                                            <label class="filter-label">Kepemilikan Kendaraan</label>
-                                            <select name="aset_kendaraan" class="filter-select w-full bg-white">
-                                                <option value="">-- Pilih Kepemilikan Kendaraan --</option>
-                                                <?php 
-                                                    $kendaraan_opts = [
-                                                        'Tidak Memiliki Kendaraan',
-                                                        '1 Unit Sepeda Motor',
-                                                        '2 Unit Sepeda Motor atau Lebih',
-                                                        '1 Unit Mobil',
-                                                        'Mobil dan Sepeda Motor'
-                                                    ];
-                                                    foreach ($kendaraan_opts as $k_opt):
-                                                ?>
-                                                    <option value="<?= htmlspecialchars($k_opt) ?>" <?= $aset_kendaraan_val === $k_opt ? 'selected' : '' ?>><?= htmlspecialchars($k_opt) ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="filter-item">
-                                            <label class="filter-label">Bangunan Tempat Tinggal</label>
-                                            <select name="aset_bangunan" class="filter-select w-full bg-white">
-                                                <option value="">-- Pilih Status Tempat Tinggal --</option>
-                                                <?php 
-                                                    $bangunan_opts = [
-                                                        'Menumpang / Tinggal Bersama Kerabat',
-                                                        'Sewa / Kontrak Rumah',
-                                                        'Rumah Sendiri (Sederhana / Non-Permanen)',
-                                                        'Rumah Sendiri (Permanen)',
-                                                        'Rumah Sendiri (Mewah)'
-                                                    ];
-                                                    foreach ($bangunan_opts as $b_opt):
-                                                ?>
-                                                    <option value="<?= htmlspecialchars($b_opt) ?>" <?= $aset_bangunan_val === $b_opt ? 'selected' : '' ?>><?= htmlspecialchars($b_opt) ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. Uang Makan Satu Keluarga per Hari -->
-                                <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                    <div class="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100 text-gray-800 font-bold text-sm">
-                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        <span>3. Uang Makan Satu Keluarga per Hari</span>
-                                    </div>
-
-                                    <div class="filter-item">
-                                        <label class="filter-label">Estimasi Pengeluaran Uang Makan Keluarga (Per Hari)</label>
-                                        <select name="uang_makan_harian" class="filter-select w-full bg-white">
-                                            <option value="">-- Pilih Estimasi Uang Makan Harian --</option>
-                                            <?php 
-                                                $makan_opts = [
-                                                    '< Rp 30.000 / hari',
-                                                    'Rp 30.000 - Rp 50.000 / hari',
-                                                    'Rp 50.000 - Rp 100.000 / hari',
-                                                    '> Rp 100.000 / hari'
-                                                ];
-                                                foreach ($makan_opts as $m_opt):
-                                            ?>
-                                                <option value="<?= htmlspecialchars($m_opt) ?>" <?= $uang_makan_val === $m_opt ? 'selected' : '' ?>><?= htmlspecialchars($m_opt) ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between pt-2">
-                            <button type="button" onclick="goToStep(2)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali ke Proses 2</button>
-                            <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2">
+                            <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                <span>Simpan Pendaftaran Mahasiswa</span>
+                                <span>Simpan Data Mahasiswa</span>
                             </button>
                         </div>
+                    </div>
                     </div>
                 </form>
             </div>
         </div>
         
         <script>
-            function setGolonganUmumDirect() {
-                const golInput = document.getElementById('golonganInput');
-                if (golInput) golInput.value = 'Umum';
-                const radioUmum = document.querySelector('input[name="ajukan_beasiswa"][value="Umum"]');
-                if (radioUmum) radioUmum.checked = true;
-            }
-
-            function updateGolonganFromRadio(val) {
-                const golInput = document.getElementById('golonganInput');
-                if (golInput) golInput.value = val;
-
-                const detailContainer = document.getElementById('containerDetailBeasiswa');
-                const badgeStatus = document.getElementById('badgeStatusBeasiswa');
-                if (detailContainer) {
-                    if (val === 'Umum') {
-                        detailContainer.classList.add('opacity-40', 'pointer-events-none');
-                        if (badgeStatus) {
-                            badgeStatus.textContent = 'Jalur Reguler / Tanpa Beasiswa (Data Tidak Wajib)';
-                            badgeStatus.className = 'text-xs font-semibold bg-gray-100 text-gray-600 px-3 py-1 rounded-full border border-gray-200';
-                        }
-                    } else {
-                        detailContainer.classList.remove('opacity-40', 'pointer-events-none');
-                        if (badgeStatus) {
-                            badgeStatus.textContent = 'Kriteria Penilaian Ekonomi Aktif';
-                            badgeStatus.className = 'text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200';
-                        }
-                    }
-                }
-            }
-
-            function autoCalculatePenghasilan() {
-                const ayah = document.getElementById('penghasilanAyah')?.value || '';
-                const ibu = document.getElementById('penghasilanIbu')?.value || '';
-                const totalSelect = document.getElementById('penghasilanSelect');
-                if (!totalSelect) return;
-
-                if (ayah.includes('> Rp 5.000.000') || ibu.includes('> Rp 5.000.000')) {
-                    totalSelect.value = '> Rp 5.000.000 / bulan';
-                } else if (ayah.includes('3.000.000') || ibu.includes('3.000.000')) {
-                    totalSelect.value = 'Rp 3.000.000 - Rp 5.000.000 / bulan';
-                } else if (ayah.includes('1.500.000') || ibu.includes('1.500.000')) {
-                    totalSelect.value = 'Rp 1.500.000 - Rp 3.000.000 / bulan';
-                } else if (ayah.includes('< Rp 1.500.000') || ibu.includes('< Rp 1.500.000')) {
-                    totalSelect.value = '< Rp 1.500.000 / bulan';
-                }
-            }
-
             function updateSubScore(idK) {
                 const select = document.getElementById('sub_select_' + idK);
                 const input = document.getElementById('sub_nilai_' + idK);
@@ -937,13 +670,15 @@ echo $style_css;
             }
 
             function goToStep(step) {
-                document.getElementById('section-step-1').classList.add('hidden');
-                document.getElementById('section-step-2').classList.add('hidden');
-                document.getElementById('section-step-3').classList.add('hidden');
+                const s1 = document.getElementById('section-step-1');
+                const s2 = document.getElementById('section-step-2');
+                if (s1) s1.classList.add('hidden');
+                if (s2) s2.classList.add('hidden');
                 
-                document.getElementById('section-step-' + step).classList.remove('hidden');
+                const cur = document.getElementById('section-step-' + step);
+                if (cur) cur.classList.remove('hidden');
 
-                for(let i=1; i<=3; i++) {
+                for(let i=1; i<=2; i++) {
                     let node = document.getElementById('step-node-'+i);
                     let label = document.getElementById('step-label-'+i);
                     let line = document.getElementById('step-line-'+i);
@@ -951,16 +686,14 @@ echo $style_css;
                     if(!node) continue;
 
                     if (i === step) {
-                        const activeBg = (i === 3) ? 'bg-amber-500 border-amber-500' : 'bg-purple-600 border-purple-600';
-                        const textCol = (i === 3) ? 'text-amber-700' : 'text-purple-700';
-                        node.className = `w-12 h-12 rounded-full border-4 ${activeBg} text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300`;
-                        label.className = `text-xs font-bold ${textCol} mt-2 text-center transition-colors`;
+                        node.className = "w-12 h-12 rounded-full border-4 border-purple-600 bg-purple-600 text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300";
+                        if (label) label.className = "text-xs font-bold text-purple-700 mt-2 text-center transition-colors";
                     } else if (i < step) {
                         node.className = "w-12 h-12 rounded-full border-4 border-purple-600 bg-white text-purple-600 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300";
-                        label.className = "text-xs font-bold text-purple-700 mt-2 text-center transition-colors";
+                        if (label) label.className = "text-xs font-bold text-purple-700 mt-2 text-center transition-colors";
                     } else {
                         node.className = "w-12 h-12 rounded-full border-4 border-gray-300 bg-white text-gray-500 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300";
-                        label.className = "text-xs font-semibold text-gray-400 mt-2 text-center transition-colors";
+                        if (label) label.className = "text-xs font-semibold text-gray-400 mt-2 text-center transition-colors";
                     }
 
                     if(line) {
@@ -1271,15 +1004,6 @@ echo $style_css;
             function validateAndGoStep(targetStep) {
                 if (targetStep === 2) {
                     if (!validateStep1()) return;
-                } else if (targetStep === 3) {
-                    if (!validateStep1()) {
-                        goToStep(1);
-                        return;
-                    }
-                    if (!validateStep2()) {
-                        goToStep(2);
-                        return;
-                    }
                 }
                 goToStep(targetStep);
             }
@@ -1336,7 +1060,7 @@ echo $style_css;
             $filtered_list = [];
             foreach ($pendaftar_list as $item) {
                 if ($jenis === 'mahasiswa' && $item['status'] !== 'Diterima') { continue; }
-                if ($search !== '' && strpos(strtolower($item['nama']), $search) === false && strpos(strtolower($item['nim']), $search) === false) { continue; }
+                if ($search !== '' && strpos(strtolower($item['nama']), $search) === false && false) { continue; }
                 if ($filter_prodi !== '' && $item['prodi'] !== $filter_prodi) { continue; }
                 if ($filter_tahun !== '' && $item['tahun'] !== $filter_tahun) { continue; }
                 if ($jenis === 'camaba' && $filter_status !== '' && $item['status'] !== $filter_status) { continue; }
@@ -1400,7 +1124,7 @@ echo $style_css;
                 <?php endif; ?>
 
                 <div class="filter-item" style="flex: 1.5; min-width: 200px;">
-                    <label class="filter-label">Cari Nama / NIM</label>
+                    <label class="filter-label">Cari Nama</label>
                     <div class="flex gap-2">
                         <input type="text" id="searchInput" value="<?= htmlspecialchars($search) ?>" class="filter-input w-full" placeholder="Ketik pencarian...">
                         <button type="button" id="btnResetFilter" class="btn-reset-filter" onclick="window.location.href='mahasiswa.php?page=mahasiswa&jenis=<?= $jenis ?>'">Reset</button>
@@ -1417,10 +1141,11 @@ echo $style_css;
                     'id'       => $item['id'],
                     'nama'     => $item['nama'],
                     'nim'      => $item['nim'] ?? '-',
-                    'prodi'    => $item['prodi'] ?? '-',
-                    'golongan' => $item['golongan'] ?? 'Umum',
-                    'tahun'    => $item['tahun'] ?? '-',
-                    'status'   => $item['status'] ?? 'Menunggu',
+                    'prodi'       => $item['prodi'] ?? '-',
+                    'golongan'    => $item['golongan'] ?? 'Umum',
+                    'tahun'       => $item['tahun'] ?? '-',
+                    'status'      => $item['status'] ?? 'Menunggu',
+                    'total_bobot' => $item['total_bobot'] ?? null,
                     'detail'   => $item['detail'] ?? [],
                     'nilai'    => isset($nilai_raw_mhs[$item['id']]) ? $nilai_raw_mhs[$item['id']] : [],
                 ];
@@ -1512,7 +1237,6 @@ echo $style_css;
                                     <th class="w-10 text-center">NO</th>
                                     <th>NAMA MAHASISWA</th>
                                     <th class="col-hide">PROGRAM STUDI</th>
-                                    <th class="w-24 text-center col-hide">GOLONGAN</th>
                                     <th class="w-20 text-center col-hide">TAHUN</th>
                                     <th class="w-28 text-center">STATUS</th>
                                     <th class="w-24 text-center">AKSI</th>
@@ -1534,10 +1258,11 @@ echo $style_css;
                                     <td class="text-center font-semibold text-gray-400 text-xs"><?= $no++ ?></td>
                                     <td>
                                         <div class="font-semibold text-gray-900 leading-snug text-sm"><?= htmlspecialchars($item['nama']) ?></div>
-                                        <div class="text-xs text-gray-400 mt-0.5">NIM: <?= htmlspecialchars($item['nim'] ?? '-') ?></div>
+                                        <?php if (isset($item['total_bobot']) && $item['total_bobot'] !== null): ?>
+                                            <div class="text-xs text-purple-600 font-medium mt-0.5">Total Skor: <?= number_format((float)$item['total_bobot'], 4) ?></div>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="col-hide"><span class="text-xs font-medium text-purple-700"><?= htmlspecialchars($item['prodi']) ?></span></td>
-                                    <td class="text-center col-hide"><span class="inline-flex px-2 py-0.5 rounded text-xs border bg-gray-50 text-gray-600 border-gray-200"><?= htmlspecialchars($golongan) ?></span></td>
                                     <td class="text-center col-hide font-medium text-gray-600 text-sm"><?= htmlspecialchars($item['tahun']) ?></td>
                                     <td class="text-center"><span class="status-pill <?= $status_class ?>"><?= htmlspecialchars($status) ?></span></td>
                                     <td class="text-center" onclick="event.stopPropagation()">
@@ -1611,7 +1336,7 @@ echo $style_css;
                                 Identitas Lengkap
                             </div>
                             <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
-                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">NIM</div><div id="dNim" class="font-mono font-semibold text-gray-800 text-[11px]"></div></div>
+                                <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Total Skor</div><div id="dNim" class="font-mono font-semibold text-purple-700 text-[11px]"></div></div>
                                 <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">NIK (KTP/KK)</div><div id="dNik" class="font-mono font-semibold text-gray-800 text-[11px]"></div></div>
                                 <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Jenis Kelamin</div><div id="dJK" class="text-gray-700"></div></div>
                                 <div><div class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Tempat, Tgl Lahir</div><div id="dTTL" class="text-gray-700"></div></div>
@@ -1744,7 +1469,7 @@ echo $style_css;
 
                 setT('detailAvatar',    initials);
                 setT('detailNama',      item.nama);
-                setT('detailSubheader', item.prodi + ' \u2022 Tahun ' + item.tahun + ' \u2022 NIM: ' + (item.nim || '-'));
+                setT('detailSubheader', item.prodi + (item.total_bobot !== null && item.total_bobot !== undefined ? ' \u2022 Total Skor: ' + parseFloat(item.total_bobot).toFixed(4) : ''));
 
                 var pill = document.getElementById('detailStatusPill');
                 if (pill) {
@@ -1761,7 +1486,7 @@ echo $style_css;
                 if (delBtn) delBtn.href  = 'mahasiswa.php?page=mahasiswa&aksi=hapus&id=' + item.id + '&jenis=' + jenisVal;
 
                 var d = item.detail || {};
-                setT('dNim',     item.nim);
+                setT('dNim',     (item.total_bobot !== null && item.total_bobot !== undefined) ? parseFloat(item.total_bobot).toFixed(4) : '-');
                 setT('dNik',     d.nik);
                 var jk = d.jenis_kelamin;
                 setT('dJK',      jk === 'L' ? 'Laki-laki' : jk === 'P' ? 'Perempuan' : jk);

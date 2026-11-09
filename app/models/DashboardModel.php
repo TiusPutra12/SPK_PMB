@@ -158,15 +158,37 @@ class DashboardModel {
 
     public function getPendaftarList() {
         $list = [];
+
+        // Cek struktur tabel mahasiswa terlebih dahulu secara dinamis
+        $checkCols = @mysqli_query($this->koneksi, "SHOW COLUMNS FROM mahasiswa");
+        $cols = [];
+        if ($checkCols) {
+            while ($c = mysqli_fetch_assoc($checkCols)) {
+                $cols[] = strtolower($c['Field']);
+            }
+        }
+
+        // Tentukan nama primary key dan nama kolom yang tersedia
+        $idCol = in_array('id_mahasiswa', $cols) ? 'id_mahasiswa' : (in_array('id_data', $cols) ? 'id_data' : (in_array('id', $cols) ? 'id' : 'id_mahasiswa'));
+        $hasNim = in_array('nim', $cols);
+        $hasNama = in_array('nama_mahasiswa', $cols) ? 'nama_mahasiswa' : (in_array('nama', $cols) ? 'nama' : "''");
+        $hasStatus = in_array('status', $cols) ? 'status' : "''";
+        $hasGolongan = in_array('golongan', $cols) ? 'golongan' : "''";
+
+        $nimSelect = $hasNim ? "m.nim" : "'' AS nim";
+        $namaSelect = ($hasNama !== "''") ? "m.{$hasNama} AS nama_mahasiswa" : "'' AS nama_mahasiswa";
+        $statusSelect = ($hasStatus !== "''") ? "m.{$hasStatus} AS status" : "'Menunggu' AS status";
+        $golonganSelect = ($hasGolongan !== "''") ? "m.{$hasGolongan} AS golongan" : "'Umum' AS golongan";
+
         $q = mysqli_query($this->koneksi, "
             SELECT 
-                m.id_mahasiswa, 
-                m.nim, 
-                m.nama_mahasiswa, 
-                m.status,
-                m.golongan
+                m.{$idCol} AS id_mahasiswa, 
+                {$nimSelect}, 
+                {$namaSelect}, 
+                {$statusSelect},
+                {$golonganSelect}
             FROM mahasiswa m
-            ORDER BY m.id_mahasiswa ASC
+            ORDER BY m.{$idCol} ASC
         ");
 
         if ($q) {
@@ -180,9 +202,9 @@ class DashboardModel {
 
                 $list[$id] = [
                     'id'       => $id,
-                    'nama'     => $row['nama_mahasiswa'],
-                    'nim'      => $row['nim'],
-                    'status'   => $row['status'],
+                    'nama'     => $row['nama_mahasiswa'] ?? 'Pendaftar #' . $id,
+                    'nim'      => $row['nim'] ?? '',
+                    'status'   => $row['status'] ?? 'Menunggu',
                     'golongan' => !empty($row['golongan']) ? $row['golongan'] : 'Umum',
                     'tahun'    => $tahun
                 ];
@@ -192,15 +214,40 @@ class DashboardModel {
     }
 
     public function getNilaiMatrix() {
-        $q = mysqli_query($this->koneksi, "
+        // Cek apakah tabel nilai ada di database
+        $checkTable = @mysqli_query($this->koneksi, "SHOW TABLES LIKE 'nilai'");
+        if (!$checkTable || mysqli_num_rows($checkTable) === 0) {
+            return [];
+        }
+
+        // Cek struktur kolom di tabel nilai
+        $checkCols = @mysqli_query($this->koneksi, "SHOW COLUMNS FROM `nilai`");
+        $cols = [];
+        if ($checkCols) {
+            while ($c = mysqli_fetch_assoc($checkCols)) {
+                $cols[] = strtolower($c['Field']);
+            }
+        }
+        $idMhsCol = in_array('id_mahasiswa', $cols) ? 'id_mahasiswa' : (in_array('id_data', $cols) ? 'id_data' : 'id_mahasiswa');
+
+        // Pastikan tabel kriteria & sub_kriteria dapat dihubungkan
+        $hasSubTable = false;
+        $checkSub = @mysqli_query($this->koneksi, "SHOW TABLES LIKE 'sub_kriteria'");
+        if ($checkSub && mysqli_num_rows($checkSub) > 0) {
+            $hasSubTable = true;
+        }
+
+        $joinSub = $hasSubTable ? "LEFT JOIN sub_kriteria s ON n.id_sub = s.id_sub" : "";
+        $selectSub = $hasSubTable ? "s.nilai AS bobot_sub" : "NULL AS bobot_sub";
+
+        $q = @mysqli_query($this->koneksi, "
             SELECT 
-                n.id_mahasiswa,
+                n.{$idMhsCol} AS id_mahasiswa,
                 n.id_kriteria,
                 n.nilai AS nilai_input,
-                s.nilai AS bobot_sub
-            FROM nilai n
-            JOIN kriteria k ON n.id_kriteria = k.id_kriteria
-            LEFT JOIN sub_kriteria s ON n.id_sub = s.id_sub
+                {$selectSub}
+            FROM `nilai` n
+            {$joinSub}
         ");
 
         $matrix = [];
@@ -208,7 +255,7 @@ class DashboardModel {
             while ($n = mysqli_fetch_assoc($q)) {
                 $id_mhs = (int)$n['id_mahasiswa'];
                 $id_krit = (int)$n['id_kriteria'];
-                $val = !is_null($n['nilai_input']) ? (float)$n['nilai_input'] : (float)$n['bobot_sub'];
+                $val = !is_null($n['nilai_input']) ? (float)$n['nilai_input'] : (!is_null($n['bobot_sub']) ? (float)$n['bobot_sub'] : 0);
                 $matrix[$id_mhs][$id_krit] = $val;
             }
         }

@@ -8,134 +8,167 @@ class MahasiswaModel {
     public function __construct() {
         global $koneksi;
         $this->db = $koneksi;
-        $this->ensureProgramStudiTable();
     }
 
-    public function ensureProgramStudiTable() {
-        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
-        if (!$check || mysqli_num_rows($check) == 0) {
-            @mysqli_query($this->db, "
-                CREATE TABLE IF NOT EXISTS `program_studi` (
-                    `id_program` INT AUTO_INCREMENT PRIMARY KEY,
-                    `nama_program` VARCHAR(100) NOT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            ");
-
-            $checkOld = @mysqli_query($this->db, "SHOW TABLES LIKE 'prodi'");
-            if ($checkOld && mysqli_num_rows($checkOld) > 0) {
-                @mysqli_query($this->db, "INSERT INTO `program_studi` (`nama_program`) SELECT `nama_prodi` FROM `prodi`");
-            } else {
-                @mysqli_query($this->db, "
-                    INSERT INTO `program_studi` (`id_program`, `nama_program`) VALUES 
-                    (1, 'S1 Teknik Informatika'), 
-                    (2, 'S1 Sistem Informasi'), 
-                    (3, 'S1 Manajemen'), 
-                    (4, 'S1 Akuntansi'), 
-                    (5, 'S1 Pariwisata'), 
-                    (6, 'S1 Pendidikan Guru Sekolah Dasar (PGSD)'), 
-                    (7, 'S1 Pendidikan Kepelatihan Olahraga (PKO)'), 
-                    (8, 'S1 Pendidikan Bahasa Inggris')
-                ");
+    public function getMahasiswaTableInfo() {
+        $checkCols = @mysqli_query($this->db, "SHOW COLUMNS FROM `mahasiswa`");
+        $cols = [];
+        if ($checkCols) {
+            while ($c = mysqli_fetch_assoc($checkCols)) {
+                $cols[] = strtolower($c['Field']);
             }
         }
+        $idCol = in_array('id_mahasiswa', $cols) ? 'id_mahasiswa' : (in_array('id_data', $cols) ? 'id_data' : (in_array('id', $cols) ? 'id' : 'id_mahasiswa'));
+        $namaCol = in_array('nama_mahasiswa', $cols) ? 'nama_mahasiswa' : (in_array('nama', $cols) ? 'nama' : "''");
+        $statusCol = in_array('status', $cols) ? 'status' : "''";
+        
+        return [
+            'id'       => $idCol, 
+            'nama'     => $namaCol, 
+            'status'   => $statusCol,
+            'cols'     => $cols
+        ];
     }
 
-    // FITUR: Menarik Data Program Studi dari tabel program_studi (kolom id_program, nama_program)
+    // Menarik Data Program Studi
     public function getListProdi() {
-        $this->ensureProgramStudiTable();
-        $q = mysqli_query($this->db, "SELECT id_program, nama_program FROM program_studi ORDER BY id_program ASC");
-        $res = [];
-        if ($q && mysqli_num_rows($q) > 0) {
-            while ($r = mysqli_fetch_assoc($q)) {
-                $res[] = $r['nama_program'];
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
+        if ($check && mysqli_num_rows($check) > 0) {
+            $q = mysqli_query($this->db, "SELECT nama_program FROM program_studi ORDER BY id_program ASC");
+            $res = [];
+            if ($q && mysqli_num_rows($q) > 0) {
+                while ($r = mysqli_fetch_assoc($q)) {
+                    $res[] = $r['nama_program'];
+                }
+                return $res;
             }
-        } else {
-            $qOld = @mysqli_query($this->db, "SELECT nama_prodi FROM prodi ORDER BY id_prodi ASC");
+        }
+
+        $checkOld = @mysqli_query($this->db, "SHOW TABLES LIKE 'prodi'");
+        if ($checkOld && mysqli_num_rows($checkOld) > 0) {
+            $qOld = mysqli_query($this->db, "SELECT nama_prodi FROM prodi ORDER BY id_prodi ASC");
+            $res = [];
             if ($qOld) {
                 while ($r = mysqli_fetch_assoc($qOld)) {
                     $res[] = $r['nama_prodi'];
                 }
+                return $res;
             }
         }
-        return $res;
+
+        return [
+            'S1 Teknik Informatika',
+            'S1 Sistem Informasi',
+            'S1 Manajemen',
+            'S1 Akuntansi',
+            'S1 Pariwisata',
+            'S1 Pendidikan Guru Sekolah Dasar (PGSD)',
+            'S1 Pendidikan Kepelatihan Olahraga (PKO)',
+            'S1 Pendidikan Bahasa Inggris'
+        ];
     }
 
-    // FITUR: Tambah Program Studi Baru ke Database
     public function addProgramStudi($nama_program) {
-        $this->ensureProgramStudiTable();
         $nama_program = trim($nama_program);
         if (empty($nama_program)) return false;
-
         $safe_nama = mysqli_real_escape_string($this->db, $nama_program);
 
-        // Cek duplikat nama prodi
-        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$safe_nama')");
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
         if ($check && mysqli_num_rows($check) > 0) {
-            return false; // Sudah terdaftar
+            $cek = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$safe_nama')");
+            if ($cek && mysqli_num_rows($cek) > 0) return false;
+            return mysqli_query($this->db, "INSERT INTO program_studi (nama_program) VALUES ('$safe_nama')") ? true : false;
         }
-
-        $ins = mysqli_query($this->db, "INSERT INTO program_studi (nama_program) VALUES ('$safe_nama')");
-        return $ins ? true : false;
+        return false;
     }
 
-    // FITUR: Edit Program Studi
     public function updateProgramStudi($id_program, $nama_program) {
-        $this->ensureProgramStudiTable();
         $id = (int)$id_program;
         $nama_program = trim($nama_program);
         if ($id <= 0 || empty($nama_program)) return false;
-
         $safe_nama = mysqli_real_escape_string($this->db, $nama_program);
-        $check = mysqli_query($this->db, "SELECT id_program FROM program_studi WHERE LOWER(nama_program) = LOWER('$safe_nama') AND id_program != '$id'");
-        if ($check && mysqli_num_rows($check) > 0) {
-            return false;
-        }
 
-        $upd = mysqli_query($this->db, "UPDATE program_studi SET nama_program = '$safe_nama' WHERE id_program = '$id'");
-        return $upd ? true : false;
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
+        if ($check && mysqli_num_rows($check) > 0) {
+            return mysqli_query($this->db, "UPDATE program_studi SET nama_program = '$safe_nama' WHERE id_program = '$id'") ? true : false;
+        }
+        return false;
     }
 
-    // FITUR: Hapus Program Studi
     public function deleteProgramStudi($id_program) {
-        $this->ensureProgramStudiTable();
         $id = (int)$id_program;
         if ($id <= 0) return false;
-
-        $del = mysqli_query($this->db, "DELETE FROM program_studi WHERE id_program = '$id'");
-        return $del ? true : false;
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'program_studi'");
+        if ($check && mysqli_num_rows($check) > 0) {
+            return mysqli_query($this->db, "DELETE FROM program_studi WHERE id_program = '$id'") ? true : false;
+        }
+        return false;
     }
 
     public function getAllMahasiswaWithDetail() {
+        $info = $this->getMahasiswaTableInfo();
+        $idCol = $info['id'];
+        $cols = $info['cols'];
+
+        $namaSelect = ($info['nama'] !== "''") ? "m.{$info['nama']} AS nama_mahasiswa" : "'' AS nama_mahasiswa";
+        $statusSelect = ($info['status'] !== "''") ? "m.{$info['status']} AS status" : "'Menunggu' AS status";
+
+        // Kolom-kolom langsung dari tabel mahasiswa
+        $nikSelect      = in_array('nik', $cols) ? "m.nik" : "'-' AS nik";
+        $jkSelect       = in_array('jenis_kelamin', $cols) ? "m.jenis_kelamin" : "'L' AS jenis_kelamin";
+        $ttlSelect      = in_array('tempat_tanggal_lahir', $cols) ? "m.tempat_tanggal_lahir" : "'-' AS tempat_tanggal_lahir";
+        $sekolahSelect  = in_array('asal_sekolah', $cols) ? "m.asal_sekolah" : "'-' AS asal_sekolah";
+        $jurusanSelect  = in_array('jurusan_asal', $cols) ? "m.jurusan_asal" : "'Umum' AS jurusan_asal";
+        $hpSelect       = in_array('no_hp', $cols) ? "m.no_hp" : "'-' AS no_hp";
+        $emailSelect    = in_array('email', $cols) ? "m.email" : "'-' AS email";
+        $alamatSelect   = in_array('alamat', $cols) ? "m.alamat" : "'-' AS alamat";
+        $golonganSelect = in_array('golongan', $cols) ? "m.golongan" : "'Umum' AS golongan";
+        $totalSelect    = in_array('total_bobot', $cols) ? "m.total_bobot" : "NULL AS total_bobot";
+
         $q = mysqli_query($this->db, "
             SELECT 
-                m.id_mahasiswa, m.nama_mahasiswa, m.status,
-                d.id_data, d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, 
-                d.asal_sekolah, d.jurusan_asal, d.no_hp, d.email, d.alamat
+                m.{$idCol} AS id_mahasiswa, 
+                {$namaSelect}, 
+                {$statusSelect},
+                {$nikSelect},
+                {$jkSelect},
+                {$ttlSelect},
+                {$sekolahSelect},
+                {$jurusanSelect},
+                {$hpSelect},
+                {$emailSelect},
+                {$alamatSelect},
+                {$golonganSelect},
+                {$totalSelect}
             FROM mahasiswa m
-            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
-            ORDER BY m.id_mahasiswa DESC
+            ORDER BY m.{$idCol} DESC
         ");
 
         $list = [];
         if ($q) {
             while ($row = mysqli_fetch_assoc($q)) {
                 $id = (int)$row['id_mahasiswa'];
-                $tahun = '2024';
+                $tahun = '2026';
 
                 $list[$id] = [
                     'id'            => $id,
-                    'nama'          => $row['nama_mahasiswa'],
+                    'nama'          => $row['nama_mahasiswa'] ?? 'Mahasiswa #' . $id,
                     'prodi'         => !empty($row['jurusan_asal']) ? $row['jurusan_asal'] : 'Umum',
                     'tahun'         => $tahun,
                     'status'        => !empty($row['status']) ? $row['status'] : 'Menunggu',
+                    'golongan'      => !empty($row['golongan']) ? $row['golongan'] : 'Umum',
+                    'total_bobot'   => isset($row['total_bobot']) && $row['total_bobot'] !== null ? (float)$row['total_bobot'] : null,
                     'detail'        => [
                         'nik'                  => $row['nik'] ?? '-',
                         'jenis_kelamin'        => $row['jenis_kelamin'] ?? '-',
                         'tempat_tanggal_lahir' => $row['tempat_tanggal_lahir'] ?? '-',
                         'asal_sekolah'         => $row['asal_sekolah'] ?? '-',
+                        'jurusan_asal'         => $row['jurusan_asal'] ?? '-',
                         'no_hp'                => $row['no_hp'] ?? '-',
                         'email'                => $row['email'] ?? '-',
                         'alamat'               => $row['alamat'] ?? '-',
+                        'golongan'             => $row['golongan'] ?? 'Umum',
+                        'total_bobot'          => isset($row['total_bobot']) && $row['total_bobot'] !== null ? (float)$row['total_bobot'] : null,
                     ]
                 ];
             }
@@ -145,59 +178,47 @@ class MahasiswaModel {
 
     public function getMahasiswaById($id) {
         $id = (int)$id;
+        $info = $this->getMahasiswaTableInfo();
+        $idCol = $info['id'];
+        $cols = $info['cols'];
+
+        $namaSelect = ($info['nama'] !== "''") ? "m.{$info['nama']} AS nama_mahasiswa" : "'' AS nama_mahasiswa";
+        $statusSelect = ($info['status'] !== "''") ? "m.{$info['status']} AS status" : "'Menunggu' AS status";
+
+        $nikSelect      = in_array('nik', $cols) ? "m.nik" : "'-' AS nik";
+        $jkSelect       = in_array('jenis_kelamin', $cols) ? "m.jenis_kelamin" : "'L' AS jenis_kelamin";
+        $ttlSelect      = in_array('tempat_tanggal_lahir', $cols) ? "m.tempat_tanggal_lahir" : "'-' AS tempat_tanggal_lahir";
+        $sekolahSelect  = in_array('asal_sekolah', $cols) ? "m.asal_sekolah" : "'-' AS asal_sekolah";
+        $jurusanSelect  = in_array('jurusan_asal', $cols) ? "m.jurusan_asal" : "'Umum' AS jurusan_asal";
+        $hpSelect       = in_array('no_hp', $cols) ? "m.no_hp" : "'-' AS no_hp";
+        $emailSelect    = in_array('email', $cols) ? "m.email" : "'-' AS email";
+        $alamatSelect   = in_array('alamat', $cols) ? "m.alamat" : "'-' AS alamat";
+        $golonganSelect = in_array('golongan', $cols) ? "m.golongan" : "'Umum' AS golongan";
+        $totalSelect    = in_array('total_bobot', $cols) ? "m.total_bobot" : "NULL AS total_bobot";
+
         $q = mysqli_query($this->db, "
             SELECT 
-                m.id_mahasiswa, m.nama_mahasiswa, m.status,
-                d.nik, d.jenis_kelamin, d.tempat_tanggal_lahir, 
-                d.asal_sekolah, d.jurusan_asal, d.no_hp, d.email, d.alamat
+                m.{$idCol} AS id_mahasiswa, 
+                {$namaSelect}, 
+                {$statusSelect},
+                {$nikSelect},
+                {$jkSelect},
+                {$ttlSelect},
+                {$sekolahSelect},
+                {$jurusanSelect},
+                {$hpSelect},
+                {$emailSelect},
+                {$alamatSelect},
+                {$golonganSelect},
+                {$totalSelect}
             FROM mahasiswa m
-            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
-            WHERE m.id_mahasiswa = '$id'
+            WHERE m.{$idCol} = '$id'
         ");
+
         if ($q && mysqli_num_rows($q) > 0) {
             return mysqli_fetch_assoc($q);
         }
         return null;
-    }
-
-    public function generateNIM() {
-        $prefix = date('y'); // 2 Digit Tahun Saat ini, contoh: 26
-        $jurusan_code = "0101"; // Kode default Teknik Informatika/PMB UNTRI
-        $searchPrefix = $prefix . $jurusan_code;
-        
-        $q = mysqli_query($this->db, "
-            SELECT nim FROM mahasiswa 
-            WHERE nim LIKE '{$searchPrefix}%' 
-            ORDER BY nim DESC LIMIT 1
-        ");
-        
-        $nextNumber = 1;
-        if ($q && mysqli_num_rows($q) > 0) {
-            $row = mysqli_fetch_assoc($q);
-            $lastNim = $row['nim'];
-            $lastSeq = substr($lastNim, strlen($searchPrefix));
-            if (is_numeric($lastSeq)) {
-                $nextNumber = (int)$lastSeq + 1;
-            }
-        }
-        
-        return $searchPrefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-    }
-
-    // Helper Konversi Nilai Numeric/Null untuk Kolom Database INT
-    private function prepareSqlInt($val) {
-        if ($val === null || $val === '' || $val === '-') {
-            return "NULL";
-        }
-        if (is_numeric($val)) {
-            return (int)$val;
-        }
-        // Jika format string rupiah (misal "< Rp 1.500.000") ekstrak angka atau default NULL
-        $clean = preg_replace('/[^0-9]/', '', (string)$val);
-        if ($clean !== '') {
-            return (int)$clean;
-        }
-        return "NULL";
     }
 
     // Validasi Kesesuaian NIK dan Tanggal Lahir (Aturan Dukcapil)
@@ -211,10 +232,9 @@ class MahasiswaModel {
         }
 
         if (empty($ttl) || $ttl === '-') {
-            return ['valid' => true]; // Lewati jika tidak ada TTL
+            return ['valid' => true];
         }
 
-        // Format TTL di sistem: "Tempat, YYYY-MM-DD" atau "YYYY-MM-DD" atau "Tempat, DD-MM-YYYY"
         $tglStr = '';
         if (strpos($ttl, ', ') !== false) {
             $parts = explode(', ', $ttl);
@@ -233,7 +253,7 @@ class MahasiswaModel {
             $m = $matches[2];
             $y = $matches[3];
         } else {
-            return ['valid' => true]; // Jika format bebas/tak dikenali kalender, toleransi
+            return ['valid' => true];
         }
 
         $inputDay = (int)$d;
@@ -302,10 +322,13 @@ class MahasiswaModel {
     }
 
     public function createMahasiswa($mhsData, $detailData, $nilaiKriteria = []) {
-        // 1. Validasi Duplikat NIK
+        $info = $this->getMahasiswaTableInfo();
+        $cols = $info['cols'];
+
+        // 1. Validasi Duplikat NIK langsung di tabel mahasiswa
         $nik = !empty($detailData['nik']) ? mysqli_real_escape_string($this->db, $detailData['nik']) : '-';
-        if ($nik !== '-' && $nik !== '') {
-            $cekNIK = mysqli_query($this->db, "SELECT nik FROM data_mahasiswa WHERE nik = '$nik'");
+        if ($nik !== '-' && $nik !== '' && in_array('nik', $cols)) {
+            $cekNIK = @mysqli_query($this->db, "SELECT nik FROM mahasiswa WHERE nik = '$nik'");
             if ($cekNIK && mysqli_num_rows($cekNIK) > 0) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['error_msg'] = "Gagal! NIK '$nik' sudah terdaftar dalam sistem.";
@@ -316,7 +339,7 @@ class MahasiswaModel {
         $jk = !empty($detailData['jenis_kelamin']) ? mysqli_real_escape_string($this->db, $detailData['jenis_kelamin']) : 'L';
         $ttl = !empty($detailData['tempat_tanggal_lahir']) ? mysqli_real_escape_string($this->db, $detailData['tempat_tanggal_lahir']) : '-';
 
-        // 3. Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK
+        // 2. Validasi Kesesuaian Tanggal Lahir & Jenis Kelamin dengan NIK
         if ($nik !== '-' && $nik !== '') {
             $checkNik = $this->validateNikWithTtl($nik, $ttl, $jk);
             if (!$checkNik['valid']) {
@@ -328,49 +351,81 @@ class MahasiswaModel {
 
         $nama = mysqli_real_escape_string($this->db, $mhsData['nama']);
         $status = 'Menunggu';
-        $nim = $this->generateNIM();
-        $nim = mysqli_real_escape_string($this->db, $nim);
-
-        $qMhs = mysqli_query($this->db, "INSERT INTO mahasiswa (nim, nama_mahasiswa, status) VALUES ('$nim', '$nama', '$status')");
-        if (!$qMhs) return false;
-
-        $id_new = mysqli_insert_id($this->db);
-
         $sekolah = !empty($detailData['asal_sekolah']) ? mysqli_real_escape_string($this->db, $detailData['asal_sekolah']) : '-';
         $jurusan = !empty($detailData['jurusan_asal']) ? mysqli_real_escape_string($this->db, $detailData['jurusan_asal']) : '-';
         $hp = !empty($detailData['no_hp']) ? mysqli_real_escape_string($this->db, $detailData['no_hp']) : '-';
         $email = !empty($detailData['email']) ? mysqli_real_escape_string($this->db, $detailData['email']) : '-';
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
-        $qDetail = mysqli_query($this->db, "
-            INSERT INTO data_mahasiswa (
-                id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, 
-                no_hp, email, alamat
-            )
-            VALUES (
-                '$id_new', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
-                '$hp', '$email', '$alamat'
-            )
-        ");
+        $golongan = !empty($detailData['golongan']) ? mysqli_real_escape_string($this->db, $detailData['golongan']) : 'Umum';
 
-        if (!$qDetail) {
-             mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa = '$id_new'");
-             if (session_status() === PHP_SESSION_NONE) session_start();
-             $_SESSION['error_msg'] = "Gagal menyimpan detail mahasiswa! (Error DB: " . mysqli_error($this->db) . ")";
-             return false;
+        // Hitung total_bobot skor dari nilaiKriteria
+        $calculatedTotal = $this->calculateTotalBobot($nilaiKriteria);
+
+        // Siapkan field yang tersedia di tabel mahasiswa
+        $insertData = [];
+        if ($info['nama'] !== "''") {
+            $insertData[$info['nama']] = "'$nama'";
+        }
+        if (in_array('status', $cols)) {
+            $insertData['status'] = "'$status'";
+        }
+        if (in_array('nik', $cols)) {
+            $insertData['nik'] = "'$nik'";
+        }
+        if (in_array('jenis_kelamin', $cols)) {
+            $insertData['jenis_kelamin'] = "'$jk'";
+        }
+        if (in_array('tempat_tanggal_lahir', $cols)) {
+            $insertData['tempat_tanggal_lahir'] = "'$ttl'";
+        }
+        if (in_array('asal_sekolah', $cols)) {
+            $insertData['asal_sekolah'] = "'$sekolah'";
+        }
+        if (in_array('jurusan_asal', $cols)) {
+            $insertData['jurusan_asal'] = "'$jurusan'";
+        }
+        if (in_array('no_hp', $cols)) {
+            $insertData['no_hp'] = "'$hp'";
+        }
+        if (in_array('email', $cols)) {
+            $insertData['email'] = "'$email'";
+        }
+        if (in_array('alamat', $cols)) {
+            $insertData['alamat'] = "'$alamat'";
+        }
+        if (in_array('golongan', $cols)) {
+            $insertData['golongan'] = "'$golongan'";
+        }
+        if (in_array('total_bobot', $cols)) {
+            $insertData['total_bobot'] = $calculatedTotal !== null ? "'$calculatedTotal'" : "NULL";
         }
 
+        $fieldsSql = implode(", ", array_keys($insertData));
+        $valsSql   = implode(", ", array_values($insertData));
+
+        $qMhs = mysqli_query($this->db, "INSERT INTO mahasiswa ({$fieldsSql}) VALUES ({$valsSql})");
+        if (!$qMhs) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            $_SESSION['error_msg'] = "Gagal menyimpan data mahasiswa: " . mysqli_error($this->db);
+            return false;
+        }
+
+        $id_new = mysqli_insert_id($this->db);
         $this->saveNilaiMahasiswa($id_new, $nilaiKriteria);
         return $id_new;
     }
 
     public function updateMahasiswa($id, $mhsData, $detailData, $nilaiKriteria = []) {
         $id = (int)$id;
+        $info = $this->getMahasiswaTableInfo();
+        $idCol = $info['id'];
+        $cols = $info['cols'];
 
-        // Validasi Duplikat NIK saat Edit
+        // Validasi Duplikat NIK saat Edit di tabel mahasiswa
         $nik = !empty($detailData['nik']) ? mysqli_real_escape_string($this->db, $detailData['nik']) : '-';
-        if ($nik !== '-' && $nik !== '') {
-            $cekNIK = mysqli_query($this->db, "SELECT nik FROM data_mahasiswa WHERE nik = '$nik' AND id_mahasiswa != '$id'");
-            if (mysqli_num_rows($cekNIK) > 0) {
+        if ($nik !== '-' && $nik !== '' && in_array('nik', $cols)) {
+            $cekNIK = @mysqli_query($this->db, "SELECT nik FROM mahasiswa WHERE nik = '$nik' AND {$idCol} != '$id'");
+            if ($cekNIK && mysqli_num_rows($cekNIK) > 0) {
                 if (session_status() === PHP_SESSION_NONE) session_start();
                 $_SESSION['error_msg'] = "Gagal Edit! NIK '$nik' sudah terdaftar pada pengguna lain.";
                 return false;
@@ -392,33 +447,56 @@ class MahasiswaModel {
 
         $nama = mysqli_real_escape_string($this->db, $mhsData['nama']);
         $status = mysqli_real_escape_string($this->db, $mhsData['status'] ?? 'Menunggu');
-
-        mysqli_query($this->db, "UPDATE mahasiswa SET nama_mahasiswa='$nama', status='$status' WHERE id_mahasiswa='$id'");
-
         $sekolah = !empty($detailData['asal_sekolah']) ? mysqli_real_escape_string($this->db, $detailData['asal_sekolah']) : '-';
         $jurusan = !empty($detailData['jurusan_asal']) ? mysqli_real_escape_string($this->db, $detailData['jurusan_asal']) : '-';
         $hp = !empty($detailData['no_hp']) ? mysqli_real_escape_string($this->db, $detailData['no_hp']) : '-';
         $email = !empty($detailData['email']) ? mysqli_real_escape_string($this->db, $detailData['email']) : '-';
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
-        $cek = mysqli_query($this->db, "SELECT id_data FROM data_mahasiswa WHERE id_mahasiswa='$id'");
-        if ($cek && mysqli_num_rows($cek) > 0) {
-            mysqli_query($this->db, "
-                UPDATE data_mahasiswa SET 
-                    nik='$nik', jenis_kelamin='$jk', tempat_tanggal_lahir='$ttl', 
-                    asal_sekolah='$sekolah', jurusan_asal='$jurusan', no_hp='$hp', email='$email', alamat='$alamat'
-                WHERE id_mahasiswa='$id'
-            ");
-        } else {
-            mysqli_query($this->db, "
-                INSERT INTO data_mahasiswa (
-                    id_mahasiswa, nik, jenis_kelamin, tempat_tanggal_lahir, asal_sekolah, jurusan_asal, 
-                    no_hp, email, alamat
-                )
-                VALUES (
-                    '$id', '$nik', '$jk', '$ttl', '$sekolah', '$jurusan', 
-                    '$hp', '$email', '$alamat'
-                )
-            ");
+        $golongan = !empty($detailData['golongan']) ? mysqli_real_escape_string($this->db, $detailData['golongan']) : 'Umum';
+
+        $calculatedTotal = $this->calculateTotalBobot($nilaiKriteria);
+
+        $updates = [];
+        if ($info['nama'] !== "''") {
+            $updates[] = "{$info['nama']}='$nama'";
+        }
+        if (in_array('status', $cols)) {
+            $updates[] = "status='$status'";
+        }
+        if (in_array('nik', $cols)) {
+            $updates[] = "nik='$nik'";
+        }
+        if (in_array('jenis_kelamin', $cols)) {
+            $updates[] = "jenis_kelamin='$jk'";
+        }
+        if (in_array('tempat_tanggal_lahir', $cols)) {
+            $updates[] = "tempat_tanggal_lahir='$ttl'";
+        }
+        if (in_array('asal_sekolah', $cols)) {
+            $updates[] = "asal_sekolah='$sekolah'";
+        }
+        if (in_array('jurusan_asal', $cols)) {
+            $updates[] = "jurusan_asal='$jurusan'";
+        }
+        if (in_array('no_hp', $cols)) {
+            $updates[] = "no_hp='$hp'";
+        }
+        if (in_array('email', $cols)) {
+            $updates[] = "email='$email'";
+        }
+        if (in_array('alamat', $cols)) {
+            $updates[] = "alamat='$alamat'";
+        }
+        if (in_array('golongan', $cols)) {
+            $updates[] = "golongan='$golongan'";
+        }
+        if (in_array('total_bobot', $cols) && $calculatedTotal !== null) {
+            $updates[] = "total_bobot='$calculatedTotal'";
+        }
+
+        if (!empty($updates)) {
+            $updatesSql = implode(", ", $updates);
+            mysqli_query($this->db, "UPDATE mahasiswa SET {$updatesSql} WHERE {$idCol}='$id'");
         }
 
         $this->saveNilaiMahasiswa($id, $nilaiKriteria);
@@ -427,13 +505,60 @@ class MahasiswaModel {
 
     public function deleteMahasiswa($id) {
         $id = (int)$id;
-        return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE id_mahasiswa = '$id'");
+        $info = $this->getMahasiswaTableInfo();
+        $idCol = $info['id'];
+        return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE {$idCol} = '$id'");
+    }
+
+    public function calculateTotalBobot($nilaiKriteria) {
+        if (empty($nilaiKriteria['kriteria_nilai']) && empty($nilaiKriteria['kriteria_sub'])) {
+            return null;
+        }
+
+        $qKrit = @mysqli_query($this->db, "SELECT id_kriteria, bobot, jenis FROM kriteria");
+        if (!$qKrit || mysqli_num_rows($qKrit) == 0) return null;
+
+        $kriteriaList = [];
+        $sumBobot = 0;
+        while ($k = mysqli_fetch_assoc($qKrit)) {
+            $id_k = (int)$k['id_kriteria'];
+            $b = (float)$k['bobot'];
+            $kriteriaList[$id_k] = [
+                'bobot' => $b,
+                'jenis' => $k['jenis']
+            ];
+            $sumBobot += $b;
+        }
+
+        $total = 0.0;
+        foreach ($kriteriaList as $id_k => $k) {
+            $normW = ($sumBobot > 0) ? ($k['bobot'] / $sumBobot) : 0;
+            $subId = (int)($nilaiKriteria['kriteria_sub'][$id_k] ?? 0);
+            $rawVal = $nilaiKriteria['kriteria_nilai'][$id_k] ?? null;
+
+            $score = 0.0;
+            if ($subId > 0) {
+                $qSub = @mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub = '$subId'");
+                if ($qSub && $rSub = mysqli_fetch_assoc($qSub)) {
+                    $score = (float)$rSub['nilai'];
+                }
+            } elseif (is_numeric($rawVal)) {
+                $score = (float)$rawVal;
+            }
+
+            $total += ($score * $normW);
+        }
+
+        return round($total, 4);
     }
 
     public function determineSubKriteria($id_kriteria, $nilai) {
         $id_k = (int)$id_kriteria;
         if (!is_numeric($nilai)) return 0;
         $val = (float)$nilai;
+
+        $checkSub = @mysqli_query($this->db, "SHOW TABLES LIKE 'sub_kriteria'");
+        if (!$checkSub || mysqli_num_rows($checkSub) == 0) return 0;
 
         $q = mysqli_query($this->db, "SELECT id_sub, nama_sub, nilai FROM sub_kriteria WHERE id_kriteria = '$id_k' ORDER BY id_sub ASC");
         if (!$q || mysqli_num_rows($q) == 0) return 0;
@@ -443,7 +568,6 @@ class MahasiswaModel {
             $subs[] = $r;
         }
 
-        // 1. Cek pola range "A <= nilai < B" atau "A - B"
         foreach ($subs as $s) {
             $nama = trim($s['nama_sub']);
             if (preg_match('/(\d+(?:\.\d+)?)\s*<=\s*(?:nilai|[a-zA-Z]+)?\s*<\s*(\d+(?:\.\d+)?)/i', $nama, $m)) {
@@ -461,7 +585,6 @@ class MahasiswaModel {
             }
         }
 
-        // 2. Cek pola batas atas ">= X" atau "> X"
         foreach ($subs as $s) {
             $nama = trim($s['nama_sub']);
             if (preg_match('/>=\s*(\d+(?:\.\d+)?)/', $nama, $m)) {
@@ -477,7 +600,6 @@ class MahasiswaModel {
             }
         }
 
-        // 3. Cek pola batas bawah "<= X" atau "< X"
         foreach ($subs as $s) {
             $nama = trim($s['nama_sub']);
             if (preg_match('/^<\s*(\d+(?:\.\d+)?)/', $nama, $m)) {
@@ -493,18 +615,17 @@ class MahasiswaModel {
             }
         }
 
-        // 4. Fallback khusus berdasarkan id_kriteria spesifik:
-        if ($id_k === 1) { // Nilai Rapor
+        if ($id_k === 1) {
             if ($val >= 80) return 3;
             if ($val >= 70) return 2;
             return 1;
         }
-        if ($id_k === 4) { // Nilai TKA
+        if ($id_k === 4) {
             if ($val >= 75) return 12;
             if ($val >= 65) return 11;
             return 10;
         }
-        if ($id_k === 5) { // Skor Bahasa Inggris
+        if ($id_k === 5) {
             if ($val >= 350) return 15;
             if ($val >= 300) return 14;
             return 13;
@@ -514,13 +635,15 @@ class MahasiswaModel {
     }
 
     private function saveNilaiMahasiswa($id_mhs, $nilaiKriteria) {
+        $checkNilai = @mysqli_query($this->db, "SHOW TABLES LIKE 'nilai'");
+        if (!$checkNilai || mysqli_num_rows($checkNilai) == 0) return;
+
         $id_mhs = (int)$id_mhs;
-        mysqli_query($this->db, "DELETE FROM nilai WHERE id_mahasiswa = '$id_mhs'");
+        @mysqli_query($this->db, "DELETE FROM nilai WHERE id_mahasiswa = '$id_mhs'");
 
         if (empty($nilaiKriteria['kriteria_nilai']) && empty($nilaiKriteria['kriteria_sub'])) return;
 
-        // Ambil daftar kriteria untuk membedakan yang manual dan kategori
-        $qKrit = mysqli_query($this->db, "SELECT id_kriteria, nama_kriteria FROM kriteria");
+        $qKrit = @mysqli_query($this->db, "SELECT id_kriteria, nama_kriteria FROM kriteria");
         $allKrit = [];
         if ($qKrit) {
             while ($k = mysqli_fetch_assoc($qKrit)) {
@@ -541,14 +664,12 @@ class MahasiswaModel {
                 || stripos($namaKrit, 'Inggris') !== false;
 
             if ($isManual && $val !== null) {
-                // Tentukan id_sub otomatis jika belum ada atau untuk sinkronisasi nilai manual
                 $autoSub = $this->determineSubKriteria($id_k, $val);
                 if ($autoSub > 0) {
                     $id_sub = $autoSub;
                 }
             } elseif (!$isManual && $id_sub > 0 && ($val === null || $val == 0)) {
-                // Untuk C2 & C3 (Prestasi): simpan bobot sub_kriteria sebagai nilai jika belum diinput
-                $qSub = mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub = '$id_sub'");
+                $qSub = @mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub = '$id_sub'");
                 if ($qSub && $rSub = mysqli_fetch_assoc($qSub)) {
                     $val = (float)$rSub['nilai'];
                 }
@@ -556,7 +677,7 @@ class MahasiswaModel {
 
             if ($id_sub > 0) {
                 $sqlVal = ($val !== null) ? "'$val'" : "NULL";
-                mysqli_query($this->db, "
+                @mysqli_query($this->db, "
                     INSERT INTO nilai (id_mahasiswa, id_kriteria, id_sub, nilai)
                     VALUES ('$id_mhs', '$id_k', '$id_sub', $sqlVal)
                 ");
@@ -565,7 +686,12 @@ class MahasiswaModel {
     }
 
     public function getRawNilaiMahasiswa() {
-        $q = mysqli_query($this->db, "SELECT * FROM nilai");
+        $checkNilai = @mysqli_query($this->db, "SHOW TABLES LIKE 'nilai'");
+        if (!$checkNilai || mysqli_num_rows($checkNilai) == 0) {
+            return ['raw' => []];
+        }
+
+        $q = @mysqli_query($this->db, "SELECT * FROM nilai");
         $res = [];
         if ($q) {
             while ($row = mysqli_fetch_assoc($q)) {
