@@ -325,14 +325,25 @@ class MahasiswaModel {
         $info = $this->getMahasiswaTableInfo();
         $cols = $info['cols'];
 
-        // 1. Validasi Duplikat NIK langsung di tabel mahasiswa
+        // 1. Validasi Duplikat NIK
         $nik = !empty($detailData['nik']) ? mysqli_real_escape_string($this->db, $detailData['nik']) : '-';
-        if ($nik !== '-' && $nik !== '' && in_array('nik', $cols)) {
-            $cekNIK = @mysqli_query($this->db, "SELECT nik FROM mahasiswa WHERE nik = '$nik'");
-            if ($cekNIK && mysqli_num_rows($cekNIK) > 0) {
-                if (session_status() === PHP_SESSION_NONE) session_start();
-                $_SESSION['error_msg'] = "Gagal! NIK '$nik' sudah terdaftar dalam sistem.";
-                return false;
+        if ($nik !== '-' && $nik !== '') {
+            if (in_array('nik', $cols)) {
+                $cekNIK = @mysqli_query($this->db, "SELECT nik FROM mahasiswa WHERE nik = '$nik'");
+                if ($cekNIK && mysqli_num_rows($cekNIK) > 0) {
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['error_msg'] = "Gagal! NIK '$nik' sudah terdaftar dalam sistem.";
+                    return false;
+                }
+            }
+            $checkDataMhs = @mysqli_query($this->db, "SHOW TABLES LIKE 'data_mahasiswa'");
+            if ($checkDataMhs && mysqli_num_rows($checkDataMhs) > 0) {
+                $cekNIKData = @mysqli_query($this->db, "SELECT nik FROM data_mahasiswa WHERE nik = '$nik'");
+                if ($cekNIKData && mysqli_num_rows($cekNIKData) > 0) {
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    $_SESSION['error_msg'] = "Gagal! NIK '$nik' sudah terdaftar dalam sistem.";
+                    return false;
+                }
             }
         }
 
@@ -358,8 +369,11 @@ class MahasiswaModel {
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
         $golongan = !empty($detailData['golongan']) ? mysqli_real_escape_string($this->db, $detailData['golongan']) : 'Umum';
 
-        // Hitung total_bobot skor dari nilaiKriteria
-        $calculatedTotal = $this->calculateTotalBobot($nilaiKriteria);
+        // Hitung skor penilaian: Total Akumulasi Skor (TAS), Rata-rata Skor (RSK), dan Nilai Akhir Terbobot (total)
+        $metrics = $this->calculateMetrics($nilaiKriteria);
+        $calculatedTotal = $metrics['total'];
+        $tasVal = $metrics['TAS'];
+        $rskVal = $metrics['RSK'];
 
         // Siapkan field yang tersedia di tabel mahasiswa
         $insertData = [];
@@ -395,6 +409,17 @@ class MahasiswaModel {
         }
         if (in_array('golongan', $cols)) {
             $insertData['golongan'] = "'$golongan'";
+        }
+        if (in_array('total', $cols)) {
+            $insertData['total'] = $calculatedTotal !== null ? "'$calculatedTotal'" : "NULL";
+        }
+        if (in_array('tas', $cols) || in_array('TAS', $cols)) {
+            $tasCol = in_array('TAS', $cols) ? 'TAS' : 'tas';
+            $insertData[$tasCol] = $tasVal !== null ? "'$tasVal'" : "NULL";
+        }
+        if (in_array('rsk', $cols) || in_array('RSK', $cols)) {
+            $rskCol = in_array('RSK', $cols) ? 'RSK' : 'rsk';
+            $insertData[$rskCol] = $rskVal !== null ? "'$rskVal'" : "NULL";
         }
         if (in_array('total_bobot', $cols)) {
             $insertData['total_bobot'] = $calculatedTotal !== null ? "'$calculatedTotal'" : "NULL";
@@ -454,7 +479,11 @@ class MahasiswaModel {
         $alamat = !empty($detailData['alamat']) ? mysqli_real_escape_string($this->db, $detailData['alamat']) : '-';
         $golongan = !empty($detailData['golongan']) ? mysqli_real_escape_string($this->db, $detailData['golongan']) : 'Umum';
 
-        $calculatedTotal = $this->calculateTotalBobot($nilaiKriteria);
+        // Hitung skor penilaian: Total Akumulasi Skor (TAS), Rata-rata Skor (RSK), dan Nilai Akhir Terbobot (total)
+        $metrics = $this->calculateMetrics($nilaiKriteria);
+        $calculatedTotal = $metrics['total'];
+        $tasVal = $metrics['TAS'];
+        $rskVal = $metrics['RSK'];
 
         $updates = [];
         if ($info['nama'] !== "''") {
@@ -490,6 +519,17 @@ class MahasiswaModel {
         if (in_array('golongan', $cols)) {
             $updates[] = "golongan='$golongan'";
         }
+        if (in_array('total', $cols) && $calculatedTotal !== null) {
+            $updates[] = "total='$calculatedTotal'";
+        }
+        if ((in_array('tas', $cols) || in_array('TAS', $cols)) && $tasVal !== null) {
+            $tasCol = in_array('TAS', $cols) ? 'TAS' : 'tas';
+            $updates[] = "{$tasCol}='$tasVal'";
+        }
+        if ((in_array('rsk', $cols) || in_array('RSK', $cols)) && $rskVal !== null) {
+            $rskCol = in_array('RSK', $cols) ? 'RSK' : 'rsk';
+            $updates[] = "{$rskCol}='$rskVal'";
+        }
         if (in_array('total_bobot', $cols) && $calculatedTotal !== null) {
             $updates[] = "total_bobot='$calculatedTotal'";
         }
@@ -507,16 +547,22 @@ class MahasiswaModel {
         $id = (int)$id;
         $info = $this->getMahasiswaTableInfo();
         $idCol = $info['id'];
+
+        $checkNilai = @mysqli_query($this->db, "SHOW TABLES LIKE 'nilai'");
+        if ($checkNilai && mysqli_num_rows($checkNilai) > 0) {
+            @mysqli_query($this->db, "DELETE FROM nilai WHERE id_mahasiswa = '$id'");
+        }
+
         return mysqli_query($this->db, "DELETE FROM mahasiswa WHERE {$idCol} = '$id'");
     }
 
-    public function calculateTotalBobot($nilaiKriteria) {
+    public function calculateMetrics($nilaiKriteria) {
         if (empty($nilaiKriteria['kriteria_nilai']) && empty($nilaiKriteria['kriteria_sub'])) {
-            return null;
+            return ['total' => null, 'TAS' => null, 'RSK' => null];
         }
 
         $qKrit = @mysqli_query($this->db, "SELECT id_kriteria, bobot, jenis FROM kriteria");
-        if (!$qKrit || mysqli_num_rows($qKrit) == 0) return null;
+        if (!$qKrit || mysqli_num_rows($qKrit) == 0) return ['total' => null, 'TAS' => null, 'RSK' => null];
 
         $kriteriaList = [];
         $sumBobot = 0;
@@ -530,13 +576,20 @@ class MahasiswaModel {
             $sumBobot += $b;
         }
 
-        $total = 0.0;
+        $totalWeighted = 0.0;
+        $totalAccumulated = 0.0;
+        $countFilled = 0;
+
         foreach ($kriteriaList as $id_k => $k) {
             $normW = ($sumBobot > 0) ? ($k['bobot'] / $sumBobot) : 0;
             $subId = (int)($nilaiKriteria['kriteria_sub'][$id_k] ?? 0);
             $rawVal = $nilaiKriteria['kriteria_nilai'][$id_k] ?? null;
 
-            $score = 0.0;
+            if ($subId <= 0 && is_numeric($rawVal)) {
+                $subId = $this->determineSubKriteria($id_k, (float)$rawVal);
+            }
+
+            $score = null;
             if ($subId > 0) {
                 $qSub = @mysqli_query($this->db, "SELECT nilai FROM sub_kriteria WHERE id_sub = '$subId'");
                 if ($qSub && $rSub = mysqli_fetch_assoc($qSub)) {
@@ -546,10 +599,29 @@ class MahasiswaModel {
                 $score = (float)$rawVal;
             }
 
-            $total += ($score * $normW);
+            if ($score !== null) {
+                $totalWeighted += ($score * $normW);
+                $totalAccumulated += $score;
+                $countFilled++;
+            }
         }
 
-        return round($total, 4);
+        if ($countFilled === 0) {
+            return ['total' => null, 'TAS' => null, 'RSK' => null];
+        }
+
+        $rsk = $totalAccumulated / $countFilled;
+
+        return [
+            'total' => round($totalWeighted, 4),
+            'TAS'   => round($totalAccumulated, 4),
+            'RSK'   => round($rsk, 4)
+        ];
+    }
+
+    public function calculateTotalBobot($nilaiKriteria) {
+        $metrics = $this->calculateMetrics($nilaiKriteria);
+        return $metrics['total'];
     }
 
     public function determineSubKriteria($id_kriteria, $nilai) {

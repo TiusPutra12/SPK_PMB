@@ -10,29 +10,75 @@ class AnalisisModel {
         $this->db = $koneksi;
     }
 
+    private function getIdColumn() {
+        $checkCol = @mysqli_query($this->db, "SHOW COLUMNS FROM mahasiswa LIKE 'id_data'");
+        if ($checkCol && mysqli_num_rows($checkCol) > 0) {
+            return 'id_data';
+        }
+        return 'id_mahasiswa';
+    }
+
     private function getDatasetByStatus($status_array) {
         $status_in = "'" . implode("','", $status_array) . "'";
-        $query = mysqli_query($this->db, "
-            SELECT 
-                m.id_mahasiswa, m.nama_mahasiswa, m.status, m.golongan,
-                d.penghasilan_orangtua
-            FROM mahasiswa m
-            LEFT JOIN data_mahasiswa d ON m.id_mahasiswa = d.id_mahasiswa
-            WHERE m.status IN ($status_in)
-        ");
+        $idCol = $this->getIdColumn();
+
+        // Cek kolom yang tersedia di tabel mahasiswa
+        $checkCols = @mysqli_query($this->db, "SHOW COLUMNS FROM mahasiswa");
+        $cols = [];
+        if ($checkCols) {
+            while ($c = mysqli_fetch_assoc($checkCols)) {
+                $cols[] = $c['Field'];
+            }
+        }
+
+        $selectFields = ["m.{$idCol} AS id_mahasiswa", "m.nama_mahasiswa", "m.status"];
+        if (in_array('total', $cols)) $selectFields[] = "m.total";
+        if (in_array('TAS', $cols)) $selectFields[] = "m.TAS";
+        elseif (in_array('tas', $cols)) $selectFields[] = "m.tas AS TAS";
+        if (in_array('RSK', $cols)) $selectFields[] = "m.RSK";
+        elseif (in_array('rsk', $cols)) $selectFields[] = "m.rsk AS RSK";
+
+        $sql = "SELECT " . implode(", ", $selectFields) . " FROM mahasiswa m WHERE m.status IN ($status_in)";
+        $query = mysqli_query($this->db, $sql);
 
         $dataset = [];
+        if (!$query) {
+            return $dataset;
+        }
+
+        $checkNilai = @mysqli_query($this->db, "SHOW TABLES LIKE 'nilai'");
+        $hasNilaiTbl = ($checkNilai && mysqli_num_rows($checkNilai) > 0);
+
         while ($row = mysqli_fetch_assoc($query)) {
             $id = $row['id_mahasiswa'];
-            $features = [
-                'ekonomi' => $row['penghasilan_orangtua'] ?: 'Kosong',
-                'golongan' => $row['golongan']
-            ];
+            $features = [];
 
-            // KUNCI PERBAIKAN: Klasifikasi menggunakan id_sub (Opsi Kategori), bukan skor desimal mentah
-            $qNilai = mysqli_query($this->db, "SELECT id_kriteria, id_sub FROM nilai WHERE id_mahasiswa = '$id'");
-            while ($n = mysqli_fetch_assoc($qNilai)) {
-                $features['C' . $n['id_kriteria']] = 'SUB_' . $n['id_sub'];
+            // Ekstrak fitur dari nilai metrik SPK (total, TAS, RSK)
+            $totalVal = isset($row['total']) && is_numeric($row['total']) ? (float)$row['total'] : null;
+            $tasVal   = isset($row['TAS']) && is_numeric($row['TAS']) ? (float)$row['TAS'] : null;
+            $rskVal   = isset($row['RSK']) && is_numeric($row['RSK']) ? (float)$row['RSK'] : null;
+
+            if ($totalVal !== null) {
+                $features['total_spk'] = ($totalVal >= 0.75) ? 'Tinggi' : (($totalVal >= 0.5) ? 'Sedang' : 'Rendah');
+            }
+            if ($rskVal !== null) {
+                $features['rsk'] = ($rskVal >= 0.7) ? 'Tinggi' : (($rskVal >= 0.4) ? 'Sedang' : 'Rendah');
+            }
+            if ($tasVal !== null) {
+                $features['tas'] = ($tasVal >= 3.0) ? 'Tinggi' : (($tasVal >= 1.5) ? 'Sedang' : 'Rendah');
+            }
+
+            if ($hasNilaiTbl) {
+                $qNilai = mysqli_query($this->db, "SELECT id_kriteria, id_sub FROM nilai WHERE id_mahasiswa = '$id'");
+                if ($qNilai) {
+                    while ($n = mysqli_fetch_assoc($qNilai)) {
+                        $features['C' . $n['id_kriteria']] = 'SUB_' . $n['id_sub'];
+                    }
+                }
+            }
+
+            if (empty($features)) {
+                $features['jalur_seleksi'] = 'Reguler';
             }
 
             $dataset[] = [
@@ -59,6 +105,13 @@ class AnalisisModel {
         foreach ($trainingData as $t) {
             if ($t['status'] === 'Diterima') $jml_diterima++;
             else if ($t['status'] === 'Ditolak') $jml_ditolak++;
+        }
+
+        if ($jml_diterima === 0 || $jml_ditolak === 0) {
+            return [
+                'status' => 'error',
+                'message' => 'Data latih belum seimbang. Sistem membutuhkan minimal 1 data berstatus Diterima dan 1 data berstatus Ditolak sebagai acuan klasifikasi.'
+            ];
         }
 
         $prior_diterima = $jml_diterima / $jml_latih;
@@ -104,7 +157,8 @@ class AnalisisModel {
             ];
 
             $id_mhs = $test['id'];
-            mysqli_query($this->db, "UPDATE mahasiswa SET status = '$keputusan' WHERE id_mahasiswa = '$id_mhs'");
+            $idCol = $this->getIdColumn();
+            mysqli_query($this->db, "UPDATE mahasiswa SET status = '$keputusan' WHERE {$idCol} = '$id_mhs'");
         }
 
         // Urutkan (Ranking) dari persentase Diterima tertinggi ke terendah
@@ -120,7 +174,7 @@ class AnalisisModel {
     }
 
     public function getSummaryMenunggu() {
-        $q = mysqli_query($this->db, "SELECT COUNT(id_mahasiswa) as total FROM mahasiswa WHERE status = 'Menunggu'");
-        return mysqli_fetch_assoc($q)['total'] ?? 0;
+        $q = mysqli_query($this->db, "SELECT COUNT(*) as total FROM mahasiswa WHERE status = 'Menunggu'");
+        return ($q && ($row = mysqli_fetch_assoc($q))) ? (int)$row['total'] : 0;
     }
 }

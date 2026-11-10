@@ -92,53 +92,46 @@ class DashboardController {
         }
 
         $tahun_stat = [];
-        $total_beasiswa = 0;
+        $total_diterima = 0;
 
         foreach ($pendaftar_list as $id_mhs => $mhs) {
             $thn = $mhs['tahun'];
             if (!isset($tahun_stat[$thn])) {
-                $tahun_stat[$thn] = ['total' => 0, 'diterima' => 0, 'beasiswa' => 0];
+                $tahun_stat[$thn] = ['total' => 0, 'diterima' => 0];
             }
             $tahun_stat[$thn]['total']++;
 
             $is_diterima = ($mhs['status'] === 'Diterima');
             if ($is_diterima) {
                 $tahun_stat[$thn]['diterima']++;
-            }
-
-            $is_beasiswa = ($mhs['golongan'] === 'Beasiswa') || ($is_diterima && $mhs['peringkat'] <= 3);
-            if ($is_beasiswa) {
-                $tahun_stat[$thn]['beasiswa']++;
-                $total_beasiswa++;
+                $total_diterima++;
             }
         }
 
         ksort($tahun_stat);
         if (empty($tahun_stat)) {
             $tahun_stat = [
-                '2022' => ['total' => 0, 'diterima' => 0, 'beasiswa' => 0],
-                '2023' => ['total' => 0, 'diterima' => 0, 'beasiswa' => 0],
-                '2024' => ['total' => 0, 'diterima' => 0, 'beasiswa' => 0],
-                '2025' => ['total' => 0, 'diterima' => 0, 'beasiswa' => 0],
-                '2026' => ['total' => 0, 'diterima' => 0, 'beasiswa' => 0],
+                '2022' => ['total' => 0, 'diterima' => 0],
+                '2023' => ['total' => 0, 'diterima' => 0],
+                '2024' => ['total' => 0, 'diterima' => 0],
+                '2025' => ['total' => 0, 'diterima' => 0],
+                '2026' => ['total' => 0, 'diterima' => 0],
             ];
         }
 
         $chart_labels   = array_keys($tahun_stat);
         $chart_total    = array_column($tahun_stat, 'total');
         $chart_diterima = array_column($tahun_stat, 'diterima');
-        $chart_beasiswa = array_column($tahun_stat, 'beasiswa');
 
         return [
             'kriteria_list'  => $kriteria_list,
             'prodi_list'     => $prodi_list,
             'pendaftar_list' => $pendaftar_list,
             'tahun_stat'     => $tahun_stat,
-            'total_beasiswa' => $total_beasiswa,
+            'total_diterima' => $total_diterima,
             'chart_labels'   => $chart_labels,
             'chart_total'    => $chart_total,
-            'chart_diterima' => $chart_diterima,
-            'chart_beasiswa' => $chart_beasiswa
+            'chart_diterima' => $chart_diterima
         ];
     }
 }

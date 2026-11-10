@@ -14,11 +14,10 @@ $kriteria_list  = $dashboardData['kriteria_list'];
 $prodi_list     = $dashboardData['prodi_list'];
 $pendaftar_list = $dashboardData['pendaftar_list'];
 $tahun_stat     = $dashboardData['tahun_stat'];
-$total_beasiswa = $dashboardData['total_beasiswa'];
+$total_diterima = $dashboardData['total_diterima'] ?? 0;
 $chart_labels   = $dashboardData['chart_labels'];
 $chart_total    = $dashboardData['chart_total'];
 $chart_diterima = $dashboardData['chart_diterima'];
-$chart_beasiswa = $dashboardData['chart_beasiswa'];
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -77,15 +76,15 @@ $chart_beasiswa = $dashboardData['chart_beasiswa'];
 
         <div class="stat-card">
             <div class="stat-card-header">
-                <span class="stat-title">JALUR BEASISWA</span>
-                <div class="stat-icon amber">
+                <span class="stat-title">CALON MAHASISWA DITERIMA</span>
+                <div class="stat-icon emerald">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
-            <div class="stat-value"><?= $total_beasiswa ?></div>
-            <span class="stat-meta text-emerald-600">Penerima Beasiswa</span>
+            <div class="stat-value"><?= $total_diterima ?></div>
+            <span class="stat-meta text-emerald-600">Lolos Seleksi Penerimaan</span>
         </div>
 
         <div class="stat-card">
@@ -114,7 +113,6 @@ $chart_beasiswa = $dashboardData['chart_beasiswa'];
                 <div class="chart-legend">
                     <span class="legend-item"><span class="legend-dot purple"></span> Total Pendaftar</span>
                     <span class="legend-item"><span class="legend-dot emerald"></span> Diterima</span>
-                    <span class="legend-item"><span class="legend-dot amber"></span> Beasiswa</span>
                 </div>
             </div>
             <div class="chart-container">
@@ -254,8 +252,7 @@ $chart_beasiswa = $dashboardData['chart_beasiswa'];
 window.dashboardChartData = {
     labels: <?= json_encode($chart_labels) ?>,
     total: <?= json_encode($chart_total) ?>,
-    diterima: <?= json_encode($chart_diterima) ?>,
-    beasiswa: <?= json_encode($chart_beasiswa) ?>
+    diterima: <?= json_encode($chart_diterima) ?>
 };
 
 function toggleProdiDetail(id) {

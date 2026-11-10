@@ -56,8 +56,11 @@ class MahasiswaController {
             } elseif ($tgl_lahir !== '') {
                 $ttl = $tgl_lahir;
             }
+            $golongan = 'Umum';
+
             $mhsData = [
                 'nama'     => $_POST['nama'] ?? '',
+                'golongan' => 'Umum'
             ];
             $detailData = [
                 'nik'                  => trim($_POST['nik'] ?? ''),
@@ -68,6 +71,7 @@ class MahasiswaController {
                 'no_hp'                => $_POST['no_hp'] ?? '',
                 'email'                => $_POST['email'] ?? '',
                 'alamat'               => $_POST['alamat'] ?? '',
+                'golongan'             => 'Umum'
             ];
             $nilaiKriteria = [
                 'kriteria_sub'   => $_POST['kriteria_sub'] ?? [],

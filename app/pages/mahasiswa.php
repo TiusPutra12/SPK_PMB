@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // app/pages/mahasiswa.php
 require_once __DIR__ . '/../controllers/MahasiswaController.php';
 
@@ -63,6 +63,7 @@ echo $style_css;
             $isEdit = ($aksi === 'edit');
             $id = $isEdit ? (int)$_GET['id'] : 0;
             $data = $isEdit ? ($mhsCtrl->getMahasiswaDetail($id) ?? []) : [];
+            $golongan_val = 'Umum';
             $editNilai = $nilai_raw_mhs[$id] ?? [];
 
             // Menentukan kriteria mana yang diinput manual (C1: Nilai Rapor, C4: Nilai TKA, C5: Skor Bahasa Inggris)
@@ -95,25 +96,25 @@ echo $style_css;
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800"><?= $isEdit ? 'Edit Pendaftaran Calon Mahasiswa' : 'Pendaftaran Calon Mahasiswa Baru' ?></h2>
-                <p class="text-sm text-gray-500 mt-1">Lengkapi proses pendaftaran melalui langkah berurutan di bawah ini.</p>
+                <p class="text-sm text-gray-500 mt-1">Lengkapi proses pendaftaran melalui 2 langkah di bawah ini.</p>
             </div>
             <a href="mahasiswa.php?page=mahasiswa&jenis=camaba" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">Kembali ke Daftar</a>
         </div>
 
-        <div class="mb-8 max-w-4xl mx-auto">
+        <div class="mb-8 max-w-xl mx-auto">
             <div class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm">
                 <!-- UI Progress Tracker -->
-                <div class="flex items-center justify-between w-full relative max-w-md mx-auto">
+                <div id="tracker-container" class="flex items-center justify-between w-full relative max-w-md mx-auto transition-all duration-300">
                     <div class="flex flex-col items-center relative z-10 cursor-pointer" onclick="goToStep(1)">
                         <div id="step-node-1" class="w-12 h-12 rounded-full border-4 border-purple-600 bg-purple-600 text-white font-bold text-base flex items-center justify-center shadow-md transition-all duration-300">1</div>
                         <span id="step-label-1" class="text-xs font-bold text-purple-700 mt-2 text-center transition-colors">Data Diri</span>
                     </div>
                     
-                    <div class="flex-1 h-1 mx-4 sm:mx-8 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-1" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
+                    <div class="flex-1 h-1 mx-2 sm:mx-4 bg-gray-200 rounded relative overflow-hidden"><div id="step-line-1" class="h-full bg-purple-600 w-0 transition-all duration-500"></div></div>
                     
                     <div class="flex flex-col items-center relative z-10 cursor-pointer" onclick="validateAndGoStep(2)">
                         <div id="step-node-2" class="w-12 h-12 rounded-full border-4 border-gray-300 bg-white text-gray-500 font-bold text-base flex items-center justify-center shadow-sm transition-all duration-300">2</div>
-                        <span id="step-label-2" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Input Nilai</span>
+                        <span id="step-label-2" class="text-xs font-semibold text-gray-400 mt-2 text-center transition-colors">Input Nilai & Simpan</span>
                     </div>
                 </div>
             </div>
@@ -201,6 +202,8 @@ echo $style_css;
                                     </div>
                                     
                                     <div class="filter-item"><label class="filter-label">No. HP</label><input type="text" name="no_hp" maxlength="15" value="<?= htmlspecialchars($data['no_hp'] ?? '') ?>" class="filter-input w-full bg-white" placeholder="Contoh: 08123456789"></div>
+
+                                    <input type="hidden" name="golongan" value="Umum">
                                 </div>
                             </div>
                         </div>
@@ -346,13 +349,12 @@ echo $style_css;
                         </div>
 
                         <div class="flex justify-between items-center pt-2 gap-3 flex-wrap">
-                            <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors">Kembali ke Data Diri</button>
+                            <button type="button" onclick="goToStep(1)" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer">Kembali ke Data Diri</button>
                             <button type="submit" name="<?= $isEdit ? 'simpan_edit' : 'simpan_tambah' ?>" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 <span>Simpan Data Mahasiswa</span>
                             </button>
                         </div>
-                    </div>
                     </div>
                 </form>
             </div>
@@ -639,7 +641,7 @@ echo $style_css;
                     fieldEl.value = `Total Skor: ${totalScoreFmt} | Nilai Akhir Terbobot (SPK): ${weightedPercent}% (Rata-rata: ${avgScoreFmt})`;
                     if (badgeEl) {
                         badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
-                        badgeEl.textContent = 'Γ£ô Lengkap: Semua Kriteria Terisi';
+                        badgeEl.textContent = '\u2713 Lengkap: Semua Kriteria Terisi';
                     }
                 }
 
@@ -783,16 +785,16 @@ echo $style_css;
 
                     let perbedaan = [];
                     if (!isGenderMatch) {
-                        perbedaan.push(`├óΓé¼┬ó <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
+                        perbedaan.push(`&bull; <strong>Jenis Kelamin:</strong> NIK menandakan <em>${nikGenderText}</em>, tetapi di form dipilih <em>${inputGenderText}</em>.`);
                     }
                     if (!isDayMatch) {
-                        perbedaan.push(`├óΓé¼┬ó <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
+                        perbedaan.push(`&bull; <strong>Hari/Tanggal:</strong> NIK menandakan tanggal <em>${nikRealDay}</em>, sedangkan di form dipilih tanggal <em>${inputDay}</em>.`);
                     }
                     if (!isMonthMatch) {
-                        perbedaan.push(`├óΓé¼┬ó <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
+                        perbedaan.push(`&bull; <strong>Bulan Lahir:</strong> NIK menandakan bulan <em>${nikMonth}</em>, sedangkan di form dipilih bulan <em>${inputMonth}</em>.`);
                     }
                     if (!isYearMatch) {
-                        perbedaan.push(`├óΓé¼┬ó <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
+                        perbedaan.push(`&bull; <strong>Tahun Lahir:</strong> NIK berakhiran tahun <em>${nikYY}</em>, sedangkan di form dipilih tahun <em>${inputYear}</em>.`);
                     }
 
                     return {
@@ -847,20 +849,20 @@ echo $style_css;
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-emerald-600 font-semibold";
-                        tglMsg.textContent = "├ó┼ôΓÇ£ Sesuai dengan 6 digit tanggal NIK";
+                        tglMsg.textContent = "\u2713 Sesuai dengan 6 digit tanggal NIK";
                         tglMsg.classList.remove('hidden');
                     } else {
                         nikMsg.className = "text-xs mt-1 text-rose-500 font-semibold flex items-center gap-1";
-                        nikMsg.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> ' + (res.title || 'Tidak sesuai dengan NIK');
+                        nikMsg.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> ' + (res.title || 'Tidak sesuai dengan NIK');
                         nikMsg.classList.remove('hidden');
 
                         tglMsg.className = "text-xs mt-1 text-rose-500 font-semibold";
-                        tglMsg.textContent = "├ó┼í┬á Tanggal lahir belum sesuai dengan 6 digit NIK";
+                        tglMsg.textContent = "\u26A0 Tanggal lahir belum sesuai dengan 6 digit NIK";
                         tglMsg.classList.remove('hidden');
                     }
                 } else if (nik.length === 16) {
                     nikMsg.className = "text-xs mt-1 text-purple-600 font-medium";
-                    nikMsg.textContent = "├ó┼ôΓÇ£ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
+                    nikMsg.textContent = "\u2713 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan.";
                     nikMsg.classList.remove('hidden');
                     tglMsg.classList.add('hidden');
                 }
@@ -932,9 +934,9 @@ echo $style_css;
                     htmlMsg += `
                         <div class="p-3 text-xs text-left bg-gray-50 text-gray-600 border border-gray-200 rounded-lg space-y-1">
                             <div class="font-bold text-gray-800 border-b border-gray-200 pb-1 mb-1">Ketentuan Format 16 Digit NIK:</div>
-                            <div>ΓÇó <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
-                            <div>ΓÇó <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
-                            <div>ΓÇó <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
+                            <div>&bull; <strong>6 Digit Awal (1-6):</strong> Kode Wilayah Pendaftaran</div>
+                            <div>&bull; <strong>6 Digit Tengah (7-12):</strong> Tanggal Lahir (DDMMYY), dengan <em>penambahan angka 40</em> pada tanggal untuk perempuan</div>
+                            <div>&bull; <strong>4 Digit Akhir (13-16):</strong> Nomor Urut Registrasi</div>
                         </div>
                     `;
 
@@ -991,7 +993,7 @@ echo $style_css;
                         title: 'Nilai Penilaian Belum Lengkap',
                         html: '<div class="text-left text-sm text-gray-700 mb-2">Silakan periksa kembali nilai yang Anda input pada Proses 2:</div>'
                             + '<div class="p-3 text-xs text-left bg-amber-50 text-amber-900 border border-amber-200 rounded-lg leading-relaxed space-y-1 font-medium">'
-                            + 'ΓÇó ' + missing.join('<br>ΓÇó ')
+                            + '&bull; ' + missing.join('<br>&bull; ')
                             + '</div>',
                         confirmButtonColor: '#9333ea'
                     });
@@ -1007,6 +1009,19 @@ echo $style_css;
                 }
                 goToStep(targetStep);
             }
+
+            document.getElementById('formPendaftaran')?.addEventListener('submit', function(e) {
+                if (!validateStep1()) {
+                    e.preventDefault();
+                    goToStep(1);
+                    return false;
+                }
+                if (!validateStep2()) {
+                    e.preventDefault();
+                    goToStep(2);
+                    return false;
+                }
+            });
 
             document.addEventListener("DOMContentLoaded", function() {
                 checkNikTanggalLive();

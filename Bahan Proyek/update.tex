@@ -66,3 +66,51 @@ Antigravity : (03/11/2026)
         3. Penyembunyian Skor Otomatis & Penambahan Field Hasil Gabungan
                 a. Menyembunyikan tampilan kolom "Skor Nilai (Otomatis)" pada tiap card kriteria (C1-C5) agar form tampil lebih bersih dan fokus pada input data.
                 b. Menambahkan field "Hasil Gabungan Skor Nilai Penilaian" di bagian paling bawah Proses 2 yang secara dinamis dan live menghitung serta menampilkan total skor gabungan, nilai akhir terbobot (SPK), dan rincian skor per kriteria.
+
+Antigravity : (10/11/2026)
+        log :
+        1. Perbaikan Error 3734 Relasi Foreign Key Database (`pmbdb.sql`)
+        2. Alur Pendaftaran Dinamis: Pemilihan Jalur Pendaftaran pada Data Diri (Proses 1)
+        3. Penyimpanan Metrik Penilaian TAS (Total Akumulasi Skor), RSK (Rata-rata Skor), dan Total SPK
+        4. Kondisional Proses 3: Langsung Simpan untuk Jalur Umum, Tampilkan Form Beasiswa untuk Jalur Beasiswa
+        5. Pembersihan Encoding Karakter (Mojibake) pada Pesan Validasi & Alert NIK / Tanggal Lahir
+        6. Perbaikan Error Klasifikasi Naive Bayes: Relasi Tabel Mahasiswa & Sinkronisasi Session (AnalisisModel.php)
+        7. Penghapusan Menyeluruh Fitur Beasiswa (Transisi Penuh ke Seleksi Penerimaan Mahasiswa Baru Murni)
+
+        detail :
+        1. Perbaikan Database & Foreign Key Constraint
+                a. Memperbaiki penamaan primary key tabel `mahasiswa` menjadi `id_mahasiswa` (sebelumnya tertulis `id_data` di dump pmbdb.sql yang memicu error 3734 pada foreign key `fk_data_mahasiswa` dan `fk_nilai_mahasiswa`).
+                b. Menambahkan struktur tabel `nilai` serta data awal records (`kriteria`, `sub_kriteria`, `program_studi`, `users`) ke file `pmbdb.sql` agar database dapat diimpor langsung tanpa error.
+                c. Menambahkan kolom `total`, `TAS`, `RSK`, dan kolom sosial ekonomi ke tabel `mahasiswa` secara terintegrasi.
+        2. Alur Dinamis Jalur Pendaftaran (Proses 1 & Proses 2)
+                a. Menambahkan pilihan radio card "Jalur Pendaftaran" pada Proses 1 (Data Diri): "Jalur Umum (Reguler)" vs "Pengajuan Beasiswa".
+                b. UI Progress Tracker Dinamis: Jika memilih Jalur Umum, tracker hanya menampilkan 2 tahapan (1: Data Diri, 2: Input Nilai & Simpan). Jika memilih Pengajuan Beasiswa, tracker menampilkan 3 tahapan (1: Data Diri, 2: Input Nilai, 3: Pengajuan Beasiswa).
+                c. Pada Proses 2 (Input Nilai): Jika Jalur Umum, tombol aksi di bagian bawah adalah "Simpan Data Mahasiswa" yang langsung memvalidasi dan menyimpan data tanpa menampilkan Proses 3. Jika Pengajuan Beasiswa, tombol aksi adalah "Lanjut ke Proses 3: Pengajuan Beasiswa".
+        3. Penyimpanan Metrik Nilai (MahasiswaModel.php)
+                a. Membuat fungsi `calculateMetrics($nilaiKriteria)` yang secara matematis menghitung TAS (Total Akumulasi Skor), RSK (Rata-rata Skor Kriteria), dan Total Skor Terbobot SPK.
+                b. Menyimpan seluruh metrik tersebut (`TAS`, `RSK`, `total`) secara otomatis ke tabel `mahasiswa` saat pendaftaran disimpan maupun diperbarui.
+        4. Normalisasi Karakter & Pesan Validasi (mahasiswa.php)
+                a. Mengganti seluruh karakter mojibake akibat perbedaan encoding CP1252/UTF-8 pada notifikasi live NIK dan SweetAlert (seperti `├ó┼ôΓÇ£`, `├ó┼í┬á`, `ΓÇó`) menggunakan Unicode escape sequence standar (`\u2713` untuk centang, `\u26A0` untuk peringatan) dan HTML entity (`&bull;`, `&#9889;`).
+                b. Menjamin teks status seperti "✓ 16 digit NIK lengkap. Pilih tanggal lahir untuk pencocokan." tampil bersih dan presisi pada semua browser dan sistem operasi.
+        5. Penyesuaian Query Analisis Naive Bayes (AnalisisModel.php & analisis.php)
+                a. Menghilangkan ketergantungan `LEFT JOIN data_mahasiswa` yang menyebabkan fatal error `Table 'pmbdb.data_mahasiswa' doesn't exist`.
+                b. Menambahkan deteksi dinamis nama primary key (`id_data` vs `id_mahasiswa`) pada seluruh query sehingga query kompatibel dengan dump database terbaru.
+                c. Memperbaiki query penghitungan status `SELECT COUNT(*)` pada `getSummaryMenunggu()` untuk mencegah error `Unknown column 'id_mahasiswa'`.
+                d. Memperbaiki persistensi flash session pada `analisis.php` agar pesan notifikasi SweetAlert berhasil ter-unset dan tidak muncul berulang saat halaman di-refresh.
+        6. Penghapusan Menyeluruh Fitur Beasiswa (Transisi Penuh ke Seleksi Penerimaan Mahasiswa Baru Murni)
+                a. Form Pendaftaran & Antarmuka (`mahasiswa.php` & `mahasiswa.js`):
+                   - Menghilangkan radio card Jalur Pendaftaran; semua pendaftaran kini terstandardisasi menjadi jalur penerimaan mahasiswa baru reguler/umum.
+                   - Menyederhanakan alur pendaftaran menjadi 2 tahapan linear: 1. Data Diri dan 2. Input Nilai & Simpan Data Mahasiswa.
+                   - Menghapus Proses 3 (Pengajuan Beasiswa & Data Sosial Ekonomi) beserta seluruh input terkait (penghasilan orang tua, pekerjaan orang tua, aset, jumlah tanggungan, dsb.).
+                b. Controller & Model Mahasiswa (`MahasiswaController.php` & `MahasiswaModel.php`):
+                   - Menghapus seluruh parsing, validasi, dan persistensi kolom sosial-ekonomi beasiswa.
+                   - Menetapkan nilai default kolom `golongan` menjadi `'Umum'`.
+                   - Mempertahankan kalkulasi metrik SPK (`total`, `TAS`, `RSK`) untuk klasifikasi penerimaan.
+                c. Modul Analisis Naive Bayes (`AnalisisModel.php`):
+                   - Menghapus fitur sosial ekonomi beasiswa (`penghasilan_orangtua` dan `golongan`) dari variabel klasifikasi Naive Bayes.
+                   - Fokus klasifikasi murni pada evaluasi penerimaan calon mahasiswa baru berdasarkan metrik penilaian (`total`, `TAS`, `RSK`) dan kriteria akademik.
+                d. Dashboard Statistik & Visualisasi (`dashboard.php`, `DashboardController.php`, `dashboard.js`):
+                   - Mengganti kartu statistik 'Jalur Beasiswa' menjadi 'Calon Mahasiswa Diterima'.
+                   - Menghapus dataset Beasiswa pada grafik tren pendaftaran, menyisakan visualisasi pendaftar dan mahasiswa yang diterima.
+                e. Database (`pmbdb.sql`):
+                   - Menyesuaikan struktur tabel dengan skema MySQL terbaru tanpa tabel `data_mahasiswa` atau `beasiswa`.

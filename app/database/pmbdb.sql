@@ -11,7 +11,7 @@
  Target Server Version : 80030 (8.0.30)
  File Encoding         : 65001
 
- Date: 09/11/2026 23:49:27
+ Date: 10/11/2026 16:30:06
 */
 
 SET NAMES utf8mb4;
@@ -28,6 +28,15 @@ CREATE TABLE `kriteria`  (
   `bobot` float NOT NULL,
   PRIMARY KEY (`id_kriteria`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of kriteria
+-- ----------------------------
+INSERT INTO `kriteria` VALUES (1, 'Nilai Rapor', 'Benefit', 25);
+INSERT INTO `kriteria` VALUES (2, 'Prestasi Akademik', 'Benefit', 20);
+INSERT INTO `kriteria` VALUES (3, 'Prestasi Non Akademik', 'Benefit', 15);
+INSERT INTO `kriteria` VALUES (4, 'Nilai TKA', 'Benefit', 25);
+INSERT INTO `kriteria` VALUES (5, 'Skor Bahasa Inggris', 'Benefit', 15);
 
 -- ----------------------------
 -- Table structure for mahasiswa
@@ -54,6 +63,11 @@ CREATE TABLE `mahasiswa`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Records of mahasiswa
+-- ----------------------------
+INSERT INTO `mahasiswa` VALUES (2, '3171011508980001', 'L', 'Denpasar, 1998-08-15', 'SMA 2', 'Teknik Informatika', '082247011652', '-', '-', 'Menunggu', 'Umum', 'Data Dummy', NULL, NULL, NULL);
+
+-- ----------------------------
 -- Table structure for prodi
 -- ----------------------------
 DROP TABLE IF EXISTS `prodi`;
@@ -65,6 +79,11 @@ CREATE TABLE `prodi`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Records of prodi
+-- ----------------------------
+INSERT INTO `prodi` VALUES (1, 'Teknik Informatika', '');
+
+-- ----------------------------
 -- Table structure for program_studi
 -- ----------------------------
 DROP TABLE IF EXISTS `program_studi`;
@@ -73,6 +92,11 @@ CREATE TABLE `program_studi`  (
   `nama_program` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id_program`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of program_studi
+-- ----------------------------
+INSERT INTO `program_studi` VALUES (1, 'Teknik Informatika');
 
 -- ----------------------------
 -- Table structure for sub_kriteria
@@ -89,6 +113,25 @@ CREATE TABLE `sub_kriteria`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Records of sub_kriteria
+-- ----------------------------
+INSERT INTO `sub_kriteria` VALUES (1, 1, '< 70', 0.25);
+INSERT INTO `sub_kriteria` VALUES (2, 1, '70 <= nilai < 80', 0.5);
+INSERT INTO `sub_kriteria` VALUES (3, 1, '>= 80', 0.75);
+INSERT INTO `sub_kriteria` VALUES (4, 2, 'Lokal', 0.2);
+INSERT INTO `sub_kriteria` VALUES (5, 2, 'Nasional', 0.4);
+INSERT INTO `sub_kriteria` VALUES (6, 2, 'Internasional', 0.8);
+INSERT INTO `sub_kriteria` VALUES (7, 3, 'Lokal', 0.2);
+INSERT INTO `sub_kriteria` VALUES (8, 3, 'Nasional', 0.4);
+INSERT INTO `sub_kriteria` VALUES (9, 3, 'Internasional', 0.8);
+INSERT INTO `sub_kriteria` VALUES (10, 4, '< 65', 0.3);
+INSERT INTO `sub_kriteria` VALUES (11, 4, '65 <= nilai < 75', 0.6);
+INSERT INTO `sub_kriteria` VALUES (12, 4, '>= 75', 0.9);
+INSERT INTO `sub_kriteria` VALUES (13, 5, '< 300', 0.25);
+INSERT INTO `sub_kriteria` VALUES (14, 5, '300 <= nilai < 350', 0.5);
+INSERT INTO `sub_kriteria` VALUES (15, 5, '>= 350', 0.75);
+
+-- ----------------------------
 -- Table structure for users
 -- ----------------------------
 DROP TABLE IF EXISTS `users`;
@@ -98,5 +141,10 @@ CREATE TABLE `users`  (
   `password` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of users
+-- ----------------------------
+INSERT INTO `users` VALUES (1, 'admin', '506a0f5a91de41b4486d46325d1ebc420910146cc4f30f932e8982b6b10972f39a06f487cf606d55123715f478af6919d81ca6e71f80be6c863ee4eadea50208');
 
 SET FOREIGN_KEY_CHECKS = 1;

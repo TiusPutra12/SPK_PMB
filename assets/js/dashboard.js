@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const labels = chartData.labels || [];
     const dataTotal = chartData.total || [];
     const dataDiterima = chartData.diterima || [];
-    const dataBeasiswa = chartData.beasiswa || [];
 
     new Chart(ctx, {
         type: 'line',
@@ -37,18 +36,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: '#16a34a',
-                    fill: false
-                },
-                {
-                    label: 'Penerima Beasiswa',
-                    data: dataBeasiswa,
-                    borderColor: '#f59e0b', 
-                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                    tension: 0.45,
-                    borderWidth: 2.5,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#f59e0b',
                     fill: false
                 }
             ]

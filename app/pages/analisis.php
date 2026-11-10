@@ -7,6 +7,9 @@ $nbCtrl->handleRequest();
 
 $menunggu_count = $nbCtrl->getPendingCount();
 $hasil_analisis = $_SESSION['nb_results'] ?? [];
+$nb_success = $_SESSION['nb_success'] ?? null;
+$nb_error = $_SESSION['nb_error'] ?? null;
+unset($_SESSION['nb_success'], $_SESSION['nb_error']);
 
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
@@ -20,24 +23,22 @@ echo $style_css;
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        <?php if (isset($_SESSION['nb_success'])): ?>
+        <?php if (!empty($nb_success)): ?>
             Swal.fire({
                 icon: 'success',
                 title: 'Analisis Selesai!',
-                text: '<?= addslashes($_SESSION['nb_success']) ?>',
+                text: '<?= addslashes($nb_success) ?>',
                 confirmButtonColor: '#9333ea'
             });
-            <?php unset($_SESSION['nb_success']); ?>
         <?php endif; ?>
 
-        <?php if (isset($_SESSION['nb_error'])): ?>
+        <?php if (!empty($nb_error)): ?>
             Swal.fire({
                 icon: 'warning',
                 title: 'Peringatan',
-                text: '<?= addslashes($_SESSION['nb_error']) ?>',
+                text: '<?= addslashes($nb_error) ?>',
                 confirmButtonColor: '#e11d48'
             });
-            <?php unset($_SESSION['nb_error']); ?>
         <?php endif; ?>
     });
 </script>
