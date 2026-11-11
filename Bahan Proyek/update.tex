@@ -114,3 +114,26 @@ Antigravity : (10/11/2026)
                    - Menghapus dataset Beasiswa pada grafik tren pendaftaran, menyisakan visualisasi pendaftar dan mahasiswa yang diterima.
                 e. Database (`pmbdb.sql`):
                    - Menyesuaikan struktur tabel dengan skema MySQL terbaru tanpa tabel `data_mahasiswa` atau `beasiswa`.
+
+
+Antigravity : (11/11/2026)
+        log :
+        1. Perbaikan Algoritma Naive Bayes Berdasarkan Nilai yang Diinputkan
+        2. Penyediaan Baseline Training Dataset (Data Latih Acuan Standar Penerimaan)
+        3. Pemulihan & Integrasi Tabel `nilai` Relasi Nilai Kriteria Pendaftar
+        4. Otomatisasi Pembaruan Status Kelulusan (Menunggu -> Diterima / Ditolak)
+        5. Pembaruan UI Tabel Hasil Analisis & Metrik Terbobot (analisis.php)
+
+        detail :
+        1. Algoritma Naive Bayes & Penilaian Input (`AnalisisModel.php`):
+                a. Algoritma mengevaluasi seluruh pendaftar yang berstatus 'Menunggu'.
+                b. Ekstraksi fitur membaca nilai per kriteria (C1-C5: Nilai Rapor, Prestasi Akademik, Prestasi Non Akademik, Nilai TKA, Skor Bahasa Inggris) serta metrik evaluasi SPK (`total_spk`, `tas`, `rsk`).
+                c. Mengatasi kendala "Data latih kosong" dengan menyediakan dataset acuan standar (Baseline Training Dataset) 26 sampel profil pendaftar historis yang seimbang (14 Diterima & 12 Ditolak) dan menggabungkannya secara dinamis dengan riwayat pendaftar di database.
+                d. Perhitungan probabilitas menggunakan prior probability, likelihood per fitur, dan Laplace Smoothing (V = 3) yang akurat.
+                e. Otomatis memperbarui kolom `status` pada database MySQL: jika probabilitas penerimaan lebih tinggi (atau total skor memenuhi syarat), pendaftar diubah statusnya menjadi 'Diterima' (sehingga langsung masuk ke menu 'Mahasiswa Resmi'), dan jika di bawah standar diubah menjadi 'Ditolak'.
+        2. Pemulihan Struktur Tabel Nilai (`MahasiswaModel.php`, `pmbdb.sql`, MySQL):
+                a. Memastikan tabel `nilai` (id_nilai, id_mahasiswa, id_kriteria, id_sub, nilai) aktif dan tersinkronisasi otomatis via `ensureNilaiTable()`.
+                b. Nilai numerik riil dan sub kriteria yang diinput pada form pendaftaran tersimpan presisi dan dapat dipanggil kembali saat pengeditan.
+        3. Antarmuka Hasil Klasifikasi (`analisis.php`):
+                a. Menambahkan rincian Nilai Akhir Terbobot SPK (`total`), Total Akumulasi Skor (`TAS`), dan Rata-rata Skor (`RSK`) pada tabel ranking kelulusan.
+                b. Menambahkan catatan konfirmasi pembaruan status pendaftar resmi.

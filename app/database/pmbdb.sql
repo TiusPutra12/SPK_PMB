@@ -65,7 +65,32 @@ CREATE TABLE `mahasiswa`  (
 -- ----------------------------
 -- Records of mahasiswa
 -- ----------------------------
-INSERT INTO `mahasiswa` VALUES (2, '3171011508980001', 'L', 'Denpasar, 1998-08-15', 'SMA 2', 'Teknik Informatika', '082247011652', '-', '-', 'Menunggu', 'Umum', 'Data Dummy', NULL, NULL, NULL);
+INSERT INTO `mahasiswa` VALUES (2, '3171011508980001', 'L', 'Denpasar, 1998-08-15', 'SMA 2', 'Teknik Informatika', '082247011652', '-', '-', 'Menunggu', 'Umum', 'Data Dummy', 0.635, 3.0, 0.6);
+
+-- ----------------------------
+-- Table structure for nilai
+-- ----------------------------
+DROP TABLE IF EXISTS `nilai`;
+CREATE TABLE `nilai`  (
+  `id_nilai` int NOT NULL AUTO_INCREMENT,
+  `id_mahasiswa` int NOT NULL,
+  `id_kriteria` int NOT NULL,
+  `id_sub` int NOT NULL,
+  `nilai` float NULL DEFAULT NULL,
+  PRIMARY KEY (`id_nilai`) USING BTREE,
+  INDEX `fk_nilai_mahasiswa`(`id_mahasiswa` ASC) USING BTREE,
+  INDEX `fk_nilai_kriteria`(`id_kriteria` ASC) USING BTREE,
+  INDEX `fk_nilai_sub`(`id_sub` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of nilai
+-- ----------------------------
+INSERT INTO `nilai` VALUES (1, 2, 1, 3, 82);
+INSERT INTO `nilai` VALUES (2, 2, 2, 5, 0.4);
+INSERT INTO `nilai` VALUES (3, 2, 3, 7, 0.2);
+INSERT INTO `nilai` VALUES (4, 2, 4, 12, 78);
+INSERT INTO `nilai` VALUES (5, 2, 5, 15, 360);
 
 -- ----------------------------
 -- Table structure for prodi

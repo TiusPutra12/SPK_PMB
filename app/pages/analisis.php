@@ -87,8 +87,10 @@ echo $style_css;
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th class="w-20 text-center">RANKING</th>
+                        <th class="w-16 text-center">RANKING</th>
                         <th>NAMA MAHASISWA</th>
+                        <th class="w-36 text-center">TOTAL SKOR (SPK)</th>
+                        <th class="w-32 text-center">TAS / RSK</th>
                         <th class="w-48 text-center">PROBABILITAS (DITERIMA)</th>
                         <th class="w-40 text-center">KEPUTUSAN SISTEM</th>
                     </tr>
@@ -98,6 +100,16 @@ echo $style_css;
                         <tr class="data-row">
                             <td class="text-center font-black text-gray-500">#<?= $rank++ ?></td>
                             <td class="font-semibold text-gray-900"><?= htmlspecialchars($hasil['nama']) ?></td>
+                            <td class="text-center font-mono font-bold text-purple-700">
+                                <?= (isset($hasil['total']) && $hasil['total'] !== null) ? number_format((float)$hasil['total'], 4) : '-' ?>
+                            </td>
+                            <td class="text-center font-mono text-xs text-gray-600">
+                                <?php if (isset($hasil['tas']) && $hasil['tas'] !== null): ?>
+                                    <span class="font-bold text-purple-800" title="Total Akumulasi Skor"><?= number_format((float)$hasil['tas'], 2) ?></span> / <span class="font-bold text-blue-600" title="Rata-rata Skor Kriteria"><?= number_format((float)$hasil['rsk'], 2) ?></span>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
                             <td class="text-center">
                                 <span class="font-mono font-bold <?= $hasil['prob_diterima'] >= 50 ? 'text-emerald-600' : 'text-red-500' ?>">
                                     <?= $hasil['prob_diterima'] ?> %
@@ -113,8 +125,9 @@ echo $style_css;
                 </tbody>
             </table>
         </div>
-        <div class="p-4 bg-gray-50 border-t border-gray-100 text-sm text-gray-500 text-center">
-            Catatan: Status kelulusan ini telah otomatis diperbarui di menu Data Mahasiswa.
+        <div class="p-4 bg-gray-50 border-t border-gray-100 text-sm text-gray-600 text-center flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Status kelulusan otomatis diperbarui ke tabel mahasiswa. Calon yang berstatus <strong>Diterima</strong> otomatis masuk ke menu <strong>Mahasiswa Resmi</strong>.</span>
         </div>
     </div>
     <?php endif; ?>

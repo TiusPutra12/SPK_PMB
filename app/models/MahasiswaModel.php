@@ -8,6 +8,25 @@ class MahasiswaModel {
     public function __construct() {
         global $koneksi;
         $this->db = $koneksi;
+        $this->ensureNilaiTable();
+    }
+
+    public function ensureNilaiTable() {
+        $check = @mysqli_query($this->db, "SHOW TABLES LIKE 'nilai'");
+        if (!$check || mysqli_num_rows($check) === 0) {
+            @mysqli_query($this->db, "
+                CREATE TABLE IF NOT EXISTS `nilai` (
+                    `id_nilai` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    `id_mahasiswa` INT NOT NULL,
+                    `id_kriteria` INT NOT NULL,
+                    `id_sub` INT NOT NULL,
+                    `nilai` FLOAT NULL DEFAULT NULL,
+                    INDEX `fk_nilai_mahasiswa`(`id_mahasiswa` ASC),
+                    INDEX `fk_nilai_kriteria`(`id_kriteria` ASC),
+                    INDEX `fk_nilai_sub`(`id_sub` ASC)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            ");
+        }
     }
 
     public function getMahasiswaTableInfo() {
