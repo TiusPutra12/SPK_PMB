@@ -11,7 +11,7 @@ class DashboardController {
 
     public function handleRequest() {
         if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+            @session_start(); 
         }
 
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -21,11 +21,13 @@ class DashboardController {
 
             if ($aksi === 'tambah_prodi') {
                 $nama = trim($_POST['nama_program'] ?? '');
-                $res = $this->model->addProgramStudi($nama);
+                $kode = trim($_POST['kode_prodi'] ?? '');
+                $res = $this->model->addProgramStudi($nama, $kode);
             } elseif ($aksi === 'edit_prodi') {
                 $id   = (int)($_POST['id_program'] ?? 0);
                 $nama = trim($_POST['nama_program'] ?? '');
-                $res = $this->model->updateProgramStudi($id, $nama);
+                $kode = trim($_POST['kode_prodi'] ?? '');
+                $res = $this->model->updateProgramStudi($id, $nama, $kode);
             } elseif ($aksi === 'hapus_prodi') {
                 $id = (int)($_POST['id_program'] ?? 0);
                 $res = $this->model->deleteProgramStudi($id);
@@ -34,6 +36,10 @@ class DashboardController {
             }
 
             if ($isAjax) {
+                // KUNCI PERBAIKAN: Membersihkan semua kotoran spasi/warning sebelum membalas AJAX
+                if (ob_get_length()) {
+                    ob_clean(); 
+                }
                 header('Content-Type: application/json');
                 echo json_encode($res);
                 exit;

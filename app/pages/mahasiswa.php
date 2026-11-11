@@ -130,6 +130,7 @@ echo $style_css;
                     <?php endif; ?>
                     
 
+
                     <div id="section-step-1" class="space-y-6">
                         <div class="p-6 border border-purple-300 rounded-xl bg-purple-50/20">
                             <div class="flex items-center justify-between pb-4 border-b border-purple-200 mb-5">
@@ -245,18 +246,23 @@ echo $style_css;
                                                         <?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? 'Skor Tes / TOEFL (contoh: 380, 450)' : 'Skala: 0 - 100' ?>
                                                     </span>
                                                 </label>
+                                                <!-- KUNCI PERBAIKAN: Menambahkan oninput limiter max char dan batas maksimal nilai untuk input manual -->
                                                 <input type="number" 
                                                        step="0.01" 
                                                        min="0" 
-                                                       <?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? '' : 'max="100"' ?> 
+                                                       <?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? 'max="999"' : 'max="100"' ?> 
                                                        name="kriteria_nilai[<?= $idK ?>]" 
                                                        id="sub_nilai_<?= $idK ?>" 
                                                        value="<?= htmlspecialchars((string)$curNilai) ?>" 
                                                        class="filter-input w-full bg-white font-mono font-bold text-purple-900 border-purple-300 focus:ring-purple-500 text-base" 
                                                        placeholder="<?= (stripos($krit['nama_kriteria'], 'Inggris') !== false || $cNo === 5) ? 'Masukkan skor bahasa Inggris (misal: 450)' : 'Masukkan nilai ' . htmlspecialchars(strtolower($krit['nama_kriteria'])) . ' (misal: 85.50)' ?>" 
-                                                       oninput="autoMatchSubKriteria(<?= $idK ?>)">
+                                                       oninput="
+                                                           if(this.value.length > 6) this.value = this.value.slice(0,6);
+                                                           if(this.max && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;
+                                                           if(parseFloat(this.value) < 0) this.value = 0;
+                                                       ">
                                                 
-                                                <!-- Dropdown Sub Kriteria disembunyikan (nilai otomatis dihitung dan disimpan) -->
+                                                <!-- Dropdown Sub Kriteria disembunyikan -->
                                                 <select name="kriteria_sub[<?= $idK ?>]" 
                                                         id="sub_select_<?= $idK ?>" 
                                                         class="hidden">
@@ -291,61 +297,6 @@ echo $style_css;
                                 <?php $cNo++; endforeach; ?>
                             </div>
 
-                            <!-- HASIL GABUNGAN SEMUA SKOR NILAI PENILAIAN -->
-                            <div class="p-6 bg-gradient-to-r from-purple-50/70 via-white to-purple-50/70 border-2 border-purple-300 rounded-2xl shadow-sm mt-6">
-                                <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-purple-200 flex-wrap gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-900 text-sm tracking-wider uppercase">Hasil Gabungan Skor Nilai Penilaian</h4>
-                                            <p class="text-xs text-gray-500">Hasil gabungan dan kalkulasi otomatis dari seluruh kriteria penilaian mahasiswa.</p>
-                                        </div>
-                                    </div>
-                                    <span id="badge_status_gabungan" class="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                        Menunggu Input Nilai
-                                    </span>
-                                </div>
-
-                                <!-- Field Menampilkan Hasil Gabungan Semua Skor Nilai -->
-                                <div class="mb-5">
-                                    <label class="filter-label text-xs font-bold text-purple-900 mb-1.5 flex items-center justify-between">
-                                        <span>Hasil Gabungan Skor Nilai (Otomatis)</span>
-                                        <span class="text-[11px] text-purple-600 font-semibold" id="text_terisi_counter">0/<?= count($kriteria_db) ?> Kriteria Terisi</span>
-                                    </label>
-                                    <div class="relative">
-                                        <input type="text" id="field_hasil_gabungan" name="field_hasil_gabungan" readonly 
-                                               class="filter-input w-full bg-white font-mono font-bold text-base sm:text-lg text-purple-900 border-2 border-purple-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none" 
-                                               placeholder="Hasil gabungan skor nilai akan otomatis dihitung setelah nilai diinput...">
-                                    </div>
-                                </div>
-
-                                <!-- Rincian Akumulasi & Statistik -->
-                                <div id="breakdown_gabungan_container" class="space-y-4 pt-3 border-t border-purple-100 hidden">
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
-                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Total Akumulasi Skor</span>
-                                            <span id="stat_total_skor" class="text-xl font-black text-purple-800 font-mono">-</span>
-                                        </div>
-                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
-                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Nilai Akhir Terbobot (SPK)</span>
-                                            <span id="stat_skor_terbobot" class="text-xl font-black text-emerald-600 font-mono">-</span>
-                                        </div>
-                                        <div class="p-3.5 bg-white rounded-xl border border-purple-100 shadow-sm text-center">
-                                            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Rata-rata Skor Kriteria</span>
-                                            <span id="stat_rata_skor" class="text-xl font-black text-blue-600 font-mono">-</span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-2">Rincian Skor Tiap Kriteria:</span>
-                                        <div id="pills_breakdown_skor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                                            <!-- Diisi secara otomatis oleh JavaScript -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="flex justify-between items-center pt-2 gap-3 flex-wrap">
@@ -371,305 +322,8 @@ echo $style_css;
                 } else {
                     input.value = "";
                 }
-                calculateCombinedScore();
             }
 
-            // Sinkronisasi otomatis Sub Kriteria berdasarkan Nilai Angka Manual (C1, C4, C5)
-            function autoMatchSubKriteria(idK) {
-                const input = document.getElementById('sub_nilai_' + idK);
-                const select = document.getElementById('sub_select_' + idK);
-                const badge = document.getElementById('kategori_badge_' + idK);
-                const scoreInd = document.getElementById('score_indicator_' + idK);
-
-                if (!input || !select) return;
-
-                const rawVal = input.value.trim();
-                if (rawVal === '' || isNaN(rawVal)) {
-                    select.value = '';
-                    if (badge) badge.innerHTML = '';
-                    if (scoreInd) scoreInd.textContent = '';
-                    calculateCombinedScore();
-                    return;
-                }
-
-                const val = parseFloat(rawVal);
-                let matchedSubId = null;
-                let matchedSubName = '';
-                let matchedScore = '';
-
-                const options = Array.from(select.options).filter(opt => opt.value !== "");
-
-                // 1. Cek pola range "A <= nilai < B" atau "A - B"
-                for (let opt of options) {
-                    const name = opt.getAttribute('data-nama') || opt.text;
-                    const rangeMatch = name.match(/(\d+(?:\.\d+)?)\s*<=\s*(?:nilai|[a-zA-Z]+)?\s*<\s*(\d+(?:\.\d+)?)/i);
-                    if (rangeMatch) {
-                        const min = parseFloat(rangeMatch[1]);
-                        const max = parseFloat(rangeMatch[2]);
-                        if (val >= min && val < max) {
-                            matchedSubId = opt.value;
-                            matchedSubName = name;
-                            matchedScore = opt.getAttribute('data-score');
-                            break;
-                        }
-                    }
-                    const dashMatch = name.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
-                    if (dashMatch) {
-                        const min = parseFloat(dashMatch[1]);
-                        const max = parseFloat(dashMatch[2]);
-                        if (val >= min && val <= max) {
-                            matchedSubId = opt.value;
-                            matchedSubName = name;
-                            matchedScore = opt.getAttribute('data-score');
-                            break;
-                        }
-                    }
-                }
-
-                // 2. Cek pola batas atas ">= X" atau "> X"
-                if (!matchedSubId) {
-                    for (let opt of options) {
-                        const name = opt.getAttribute('data-nama') || opt.text;
-                        const gteMatch = name.match(/>=\s*(\d+(?:\.\d+)?)/);
-                        if (gteMatch) {
-                            const threshold = parseFloat(gteMatch[1]);
-                            if (val >= threshold) {
-                                matchedSubId = opt.value;
-                                matchedSubName = name;
-                                matchedScore = opt.getAttribute('data-score');
-                                break;
-                            }
-                        }
-                        const gtMatch = name.match(/^>\s*(\d+(?:\.\d+)?)/);
-                        if (gtMatch) {
-                            const threshold = parseFloat(gtMatch[1]);
-                            if (val > threshold) {
-                                matchedSubId = opt.value;
-                                matchedSubName = name;
-                                matchedScore = opt.getAttribute('data-score');
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // 3. Cek pola batas bawah "<= X" atau "< X"
-                if (!matchedSubId) {
-                    for (let opt of options) {
-                        const name = opt.getAttribute('data-nama') || opt.text;
-                        const ltMatch = name.match(/^<\s*(\d+(?:\.\d+)?)/);
-                        if (ltMatch) {
-                            const threshold = parseFloat(ltMatch[1]);
-                            if (val < threshold) {
-                                matchedSubId = opt.value;
-                                matchedSubName = name;
-                                matchedScore = opt.getAttribute('data-score');
-                                break;
-                            }
-                        }
-                        const lteMatch = name.match(/<=\s*(\d+(?:\.\d+)?)/);
-                        if (lteMatch && !name.includes('>')) {
-                            const threshold = parseFloat(lteMatch[1]);
-                            if (val <= threshold) {
-                                matchedSubId = opt.value;
-                                matchedSubName = name;
-                                matchedScore = opt.getAttribute('data-score');
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // 4. Fallback khusus kriteria
-                if (!matchedSubId) {
-                    if (idK === 1) { // Nilai Rapor
-                        matchedSubId = val >= 80 ? '3' : (val >= 70 ? '2' : '1');
-                    } else if (idK === 4) { // Nilai TKA
-                        matchedSubId = val >= 75 ? '12' : (val >= 65 ? '11' : '10');
-                    } else if (idK === 5) { // Skor Bhs Inggris
-                        matchedSubId = val >= 350 ? '15' : (val >= 300 ? '14' : '13');
-                    }
-                    if (matchedSubId) {
-                        const targetOpt = options.find(o => o.value == matchedSubId);
-                        if (targetOpt) {
-                            matchedSubName = targetOpt.getAttribute('data-nama') || targetOpt.text;
-                            matchedScore = targetOpt.getAttribute('data-score');
-                        }
-                    }
-                }
-
-                if (matchedSubId) {
-                    select.value = matchedSubId;
-                    if (scoreInd && matchedScore) {
-                        scoreInd.textContent = 'Bobot SPK: ' + matchedScore;
-                    }
-                    if (badge) {
-                        badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
-                        badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${matchedSubName}</strong> (Skor SPK: ${matchedScore || '-'})`;
-                    }
-                } else {
-                    select.value = '';
-                    if (badge) badge.innerHTML = '';
-                    if (scoreInd) scoreInd.textContent = '';
-                }
-
-                calculateCombinedScore();
-            }
-
-            function onManualSubSelectChange(idK) {
-                const select = document.getElementById('sub_select_' + idK);
-                const scoreInd = document.getElementById('score_indicator_' + idK);
-                const badge = document.getElementById('kategori_badge_' + idK);
-                if (!select) return;
-                const opt = select.options[select.selectedIndex];
-                if (opt && opt.value !== '') {
-                    const score = opt.getAttribute('data-score');
-                    const name = opt.getAttribute('data-nama') || opt.text;
-                    if (scoreInd && score) scoreInd.textContent = 'Bobot SPK: ' + score;
-                    if (badge) {
-                        badge.className = "text-xs mt-1.5 font-semibold text-emerald-600 flex items-center gap-1";
-                        badge.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Kategori: <strong>${name}</strong> (Skor SPK: ${score || '-'})`;
-                    }
-                } else {
-                    if (scoreInd) scoreInd.textContent = '';
-                    if (badge) badge.innerHTML = '';
-                }
-                calculateCombinedScore();
-            }
-
-            // Menghitung dan menampilkan Hasil Gabungan dari Semua Skor Nilai
-            function calculateCombinedScore() {
-                const kriteriaDb = <?= json_encode($kriteria_db) ?>;
-                const manualIds = <?= json_encode($manual_kriteria_ids) ?>;
-
-                let totalSubScore = 0;
-                let weightedScore = 0;
-                let totalBobot = 0;
-                let filledCount = 0;
-                const totalCriteria = Object.keys(kriteriaDb).length;
-                let breakdown = [];
-
-                let cNo = 1;
-                for (let idK in kriteriaDb) {
-                    const idInt = parseInt(idK, 10);
-                    const krit = kriteriaDb[idK];
-                    const bobot = parseFloat(krit.bobot) || 0;
-                    totalBobot += bobot;
-
-                    const isManual = manualIds.includes(idInt);
-                    const sel = document.getElementById('sub_select_' + idK);
-                    const inp = document.getElementById('sub_nilai_' + idK);
-
-                    let currentScore = null;
-                    let displayLabel = '-';
-                    let rawVal = '';
-
-                    if (isManual) {
-                        const valStr = inp ? inp.value.trim() : '';
-                        rawVal = valStr;
-                        if (valStr !== '' && !isNaN(valStr) && sel && sel.selectedIndex >= 0) {
-                            const opt = sel.options[sel.selectedIndex];
-                            if (opt && opt.value !== '') {
-                                currentScore = parseFloat(opt.getAttribute('data-score'));
-                                displayLabel = (opt.getAttribute('data-nama') || opt.text).replace(/\s*\(Skor.*?\)/i, '');
-                            }
-                        }
-                    } else {
-                        if (sel && sel.selectedIndex >= 0) {
-                            const opt = sel.options[sel.selectedIndex];
-                            if (opt && opt.value !== '') {
-                                currentScore = parseFloat(opt.getAttribute('data-score'));
-                                displayLabel = opt.text;
-                                rawVal = displayLabel;
-                            }
-                        }
-                    }
-
-                    if (currentScore !== null && !isNaN(currentScore)) {
-                        filledCount++;
-                        totalSubScore += currentScore;
-                        weightedScore += (bobot / 100) * currentScore;
-                        breakdown.push({
-                            cNo: cNo,
-                            nama: krit.nama_kriteria,
-                            rawVal: rawVal,
-                            score: currentScore,
-                            bobot: bobot,
-                            displayLabel: displayLabel
-                        });
-                    }
-
-                    cNo++;
-                }
-
-                const fieldEl = document.getElementById('field_hasil_gabungan');
-                const badgeEl = document.getElementById('badge_status_gabungan');
-                const counterEl = document.getElementById('text_terisi_counter');
-                const breakdownContainer = document.getElementById('breakdown_gabungan_container');
-                const totalScoreEl = document.getElementById('stat_total_skor');
-                const weightedScoreEl = document.getElementById('stat_skor_terbobot');
-                const avgScoreEl = document.getElementById('stat_rata_skor');
-                const pillsContainer = document.getElementById('pills_breakdown_skor');
-
-                if (!fieldEl) return;
-
-                if (counterEl) {
-                    counterEl.textContent = `${filledCount}/${totalCriteria} Kriteria Terisi`;
-                }
-
-                if (filledCount === 0) {
-                    fieldEl.value = '';
-                    if (badgeEl) {
-                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200';
-                        badgeEl.textContent = 'Belum Ada Nilai Terisi';
-                    }
-                    if (breakdownContainer) breakdownContainer.classList.add('hidden');
-                    return;
-                }
-
-                const totalScoreFmt = totalSubScore.toFixed(2);
-                const weightedPercent = (weightedScore * 100).toFixed(2);
-                const avgScoreFmt = (totalSubScore / filledCount).toFixed(2);
-
-                if (filledCount < totalCriteria) {
-                    fieldEl.value = `Progres (${filledCount}/${totalCriteria} Kriteria Terisi) | Total Skor: ${totalScoreFmt} | Nilai Terbobot: ${weightedPercent}%`;
-                    if (badgeEl) {
-                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200';
-                        badgeEl.textContent = `Sebagian Terisi (${filledCount}/${totalCriteria})`;
-                    }
-                } else {
-                    fieldEl.value = `Total Skor: ${totalScoreFmt} | Nilai Akhir Terbobot (SPK): ${weightedPercent}% (Rata-rata: ${avgScoreFmt})`;
-                    if (badgeEl) {
-                        badgeEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
-                        badgeEl.textContent = '\u2713 Lengkap: Semua Kriteria Terisi';
-                    }
-                }
-
-                if (totalScoreEl) totalScoreEl.textContent = totalScoreFmt;
-                if (weightedScoreEl) weightedScoreEl.textContent = weightedPercent + '%';
-                if (avgScoreEl) avgScoreEl.textContent = avgScoreFmt;
-
-                if (pillsContainer) {
-                    let htmlPills = '';
-                    breakdown.forEach(item => {
-                        htmlPills += `
-                            <div class="p-3 bg-white rounded-xl border border-purple-100 shadow-sm flex flex-col justify-between">
-                                <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-                                    <span class="font-bold text-purple-700">C${item.cNo} (Bobot ${item.bobot}%)</span>
-                                    <span class="text-gray-400 font-mono text-[10px] truncate max-w-[90px]">${item.displayLabel}</span>
-                                </div>
-                                <div class="flex items-baseline justify-between mt-1">
-                                    <span class="text-xs font-semibold text-gray-700 truncate max-w-[130px]" title="${item.nama}">${item.nama}</span>
-                                    <span class="font-mono font-bold text-sm text-purple-900 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">${item.score.toFixed(2)}</span>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    pillsContainer.innerHTML = htmlPills;
-                }
-
-                if (breakdownContainer) breakdownContainer.classList.remove('hidden');
-            }
 
             function goToStep(step) {
                 const s1 = document.getElementById('section-step-1');
@@ -1025,23 +679,6 @@ echo $style_css;
 
             document.addEventListener("DOMContentLoaded", function() {
                 checkNikTanggalLive();
-
-                // Inisialisasi awal nilai manual (termasuk saat Edit pendaftar)
-                const manualIdsInit = <?= json_encode($manual_kriteria_ids) ?>;
-                manualIdsInit.forEach(function(idK) {
-                    const input = document.getElementById('sub_nilai_' + idK);
-                    if (input && input.value.trim() !== '') {
-                        autoMatchSubKriteria(idK);
-                    }
-                });
-
-                const dropdownIdsInit = <?= json_encode($dropdown_kriteria_ids) ?>;
-                dropdownIdsInit.forEach(function(idK) {
-                    updateSubScore(idK);
-                });
-
-                // Hitung kalkulasi gabungan seluruh skor nilai
-                calculateCombinedScore();
 
                 const formPendaftaran = document.getElementById('formPendaftaran');
                 if (formPendaftaran) {

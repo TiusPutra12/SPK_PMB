@@ -1,15 +1,16 @@
 <?php 
+// KUNCI PERBAIKAN: Membuka penampung memori untuk menyedot semua pesan error/spasi kotor
+ob_start();
+error_reporting(E_ALL & ~E_NOTICE);
 
+require_once __DIR__ . '/../includes/koneksi.php';
 require_once __DIR__ . '/../controllers/DashboardController.php';
 
-// Include head and initialize controller
-include '../includes/head.php'; 
-echo $style_css; 
-
 $dashboardController = new DashboardController($koneksi);
-$dashboardController->handleRequest();
-$dashboardData       = $dashboardController->getDashboardData();
+$dashboardController->handleRequest(); 
 
+// Mulai pengambilan data
+$dashboardData       = $dashboardController->getDashboardData();
 $kriteria_list  = $dashboardData['kriteria_list'];
 $prodi_list     = $dashboardData['prodi_list'];
 $pendaftar_list = $dashboardData['pendaftar_list'];
@@ -18,6 +19,11 @@ $total_diterima = $dashboardData['total_diterima'] ?? 0;
 $chart_labels   = $dashboardData['chart_labels'];
 $chart_total    = $dashboardData['chart_total'];
 $chart_diterima = $dashboardData['chart_diterima'];
+
+// Include elemen visual setelah semua logika PHP selesai
+include '../includes/head.php'; 
+/** @var string $style_css */
+echo $style_css; 
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -155,6 +161,7 @@ $chart_diterima = $dashboardData['chart_diterima'];
                             <?php foreach ($prodi_list as $idx => $p):
                                 $id_p       = (int)($p['id_program'] ?? $p['id_prodi']);
                                 $nama_p     = htmlspecialchars($p['nama_program'] ?? $p['nama_prodi']);
+                                $kode_p     = htmlspecialchars($p['kode_prodi'] ?? ''); 
                                 $no         = $idx + 1;
                             ?>
                             <!-- Baris Utama -->
@@ -197,8 +204,8 @@ $chart_diterima = $dashboardData['chart_diterima'];
                                                         <span class="text-sm font-bold text-purple-700 font-mono">#<?= str_pad($id_p, 3, '0', STR_PAD_LEFT) ?></span>
                                                     </div>
                                                     <div class="p-3 bg-white rounded-lg border border-purple-100 shadow-sm">
-                                                        <span class="text-xs text-gray-400 font-medium block mb-1">Jenjang</span>
-                                                        <span class="text-sm font-bold text-gray-800">Strata 1 (S1)</span>
+                                                        <span class="text-xs text-gray-400 font-medium block mb-1">Kode Prodi</span>
+                                                        <span class="text-sm font-bold text-gray-800 font-mono"><?= $kode_p ?: '-' ?></span>
                                                     </div>
                                                     <div class="p-3 bg-white rounded-lg border border-purple-100 shadow-sm col-span-2">
                                                         <span class="text-xs text-gray-400 font-medium block mb-1">Nama Lengkap Program Studi</span>
@@ -209,15 +216,15 @@ $chart_diterima = $dashboardData['chart_diterima'];
                                                 <!-- Aksi Edit & Hapus -->
                                                 <div class="flex items-center gap-2 pt-2 border-t border-purple-100">
                                                     <button type="button"
-                                                        onclick="modalEditProdi(<?= $id_p ?>, '<?= addslashes($p['nama_program'] ?? $p['nama_prodi']) ?>')"
+                                                        onclick="modalEditProdi(<?= $id_p ?>, '<?= addslashes($nama_p) ?>', '<?= addslashes($kode_p) ?>')"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                                         </svg>
-                                                        Edit Nama
+                                                        Edit Data
                                                     </button>
                                                     <button type="button"
-                                                        onclick="konfirmasiHapusProdi(<?= $id_p ?>, '<?= addslashes($p['nama_program'] ?? $p['nama_prodi']) ?>')"
+                                                        onclick="konfirmasiHapusProdi(<?= $id_p ?>, '<?= addslashes($nama_p) ?>')"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -263,7 +270,6 @@ function toggleProdiDetail(id) {
 
     const isClosed = detailRow.style.display === 'none' || detailContent.classList.contains('grid-rows-[0fr]');
 
-    // Tutup semua baris lain dulu
     document.querySelectorAll('[id^="detail-row-prodi-"]').forEach(row => {
         const rId = row.id.replace('detail-row-prodi-', '');
         const c   = document.getElementById('detail-content-prodi-' + rId);
@@ -294,18 +300,25 @@ function toggleProdiDetail(id) {
     }
 }
 
+// KUNCI PERBAIKAN: Fungsi AJAX lebih tangguh yang menyedot raw text dan mengolahnya
 function _sendProdiAjax(formData, successCb, failCb) {
     fetch('dashboard.php?page=beranda', {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) successCb(data);
-        else failCb(data.message);
+    .then(async r => {
+        const text = await r.text();
+        try {
+            const data = JSON.parse(text);
+            if (data.success) successCb(data);
+            else failCb(data.message);
+        } catch (e) {
+            console.error("RESPON SERVER MENGANDUNG ERROR: ", text);
+            failCb('Gagal menyimpan. Cek terminal console untuk melihat letak kotoran kodenya.');
+        }
     })
-    .catch(() => failCb('Gagal menghubungi server.'));
+    .catch(() => failCb('Koneksi terputus. Pastikan server lokal menyala.'));
 }
 
 function modalTambahProdi() {
@@ -314,6 +327,10 @@ function modalTambahProdi() {
         html: `<div class="text-left">
                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Program Studi</label>
                    <input id="swal-nama-prodi" class="swal2-input" style="margin:0;width:100%;box-sizing:border-box;" placeholder="Contoh: S1 Desain Komunikasi Visual">
+               </div>
+               <div class="text-left mt-4">
+                   <label class="block text-sm font-medium text-gray-700 mb-1">Kode Prodi (Maks 6 Huruf)</label>
+                   <input id="swal-kode-prodi" class="swal2-input" style="margin:0;width:100%;box-sizing:border-box;" placeholder="Contoh: DKV">
                </div>`,
         focusConfirm: false,
         showCancelButton: true,
@@ -322,15 +339,19 @@ function modalTambahProdi() {
         confirmButtonColor: '#9333ea',
         cancelButtonColor: '#6b7280',
         preConfirm: () => {
-            const v = document.getElementById('swal-nama-prodi').value.trim();
-            if (!v) { Swal.showValidationMessage('Nama program studi tidak boleh kosong!'); return false; }
-            return v;
+            const nama = document.getElementById('swal-nama-prodi').value.trim();
+            const kode = document.getElementById('swal-kode-prodi').value.trim();
+            if (!nama) { Swal.showValidationMessage('Nama program studi tidak boleh kosong!'); return false; }
+            if (!kode) { Swal.showValidationMessage('Kode program studi tidak boleh kosong!'); return false; }
+            return { nama: nama, kode: kode };
         }
     }).then(result => {
         if (!result.isConfirmed) return;
         const fd = new FormData();
         fd.append('aksi', 'tambah_prodi');
-        fd.append('nama_program', result.value);
+        fd.append('nama_program', result.value.nama);
+        fd.append('kode_prodi', result.value.kode);
+        
         _sendProdiAjax(fd,
             data => Swal.fire({ icon:'success', title:'Berhasil!', text: data.message, confirmButtonColor:'#9333ea', timer:2000 })
                         .then(() => location.reload()),
@@ -339,12 +360,16 @@ function modalTambahProdi() {
     });
 }
 
-function modalEditProdi(id, namaLama) {
+function modalEditProdi(id, namaLama, kodeLama) {
     Swal.fire({
         title: 'Edit Program Studi',
         html: `<div class="text-left">
                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Baru Program Studi</label>
                    <input id="swal-edit-prodi" class="swal2-input" style="margin:0;width:100%;box-sizing:border-box;" value="${namaLama}">
+               </div>
+               <div class="text-left mt-4">
+                   <label class="block text-sm font-medium text-gray-700 mb-1">Kode Baru Prodi</label>
+                   <input id="swal-kode-prodi" class="swal2-input" style="margin:0;width:100%;box-sizing:border-box;" value="${kodeLama}">
                </div>`,
         focusConfirm: false,
         showCancelButton: true,
@@ -353,16 +378,20 @@ function modalEditProdi(id, namaLama) {
         confirmButtonColor: '#2563eb',
         cancelButtonColor: '#6b7280',
         preConfirm: () => {
-            const v = document.getElementById('swal-edit-prodi').value.trim();
-            if (!v) { Swal.showValidationMessage('Nama program studi tidak boleh kosong!'); return false; }
-            return v;
+            const nama = document.getElementById('swal-edit-prodi').value.trim();
+            const kode = document.getElementById('swal-kode-prodi').value.trim();
+            if (!nama) { Swal.showValidationMessage('Nama program studi tidak boleh kosong!'); return false; }
+            if (!kode) { Swal.showValidationMessage('Kode program studi tidak boleh kosong!'); return false; }
+            return { nama: nama, kode: kode };
         }
     }).then(result => {
         if (!result.isConfirmed) return;
         const fd = new FormData();
         fd.append('aksi', 'edit_prodi');
         fd.append('id_program', id);
-        fd.append('nama_program', result.value);
+        fd.append('nama_program', result.value.nama);
+        fd.append('kode_prodi', result.value.kode);
+        
         _sendProdiAjax(fd,
             data => Swal.fire({ icon:'success', title:'Berhasil!', text: data.message, confirmButtonColor:'#9333ea', timer:2000 })
                         .then(() => location.reload()),

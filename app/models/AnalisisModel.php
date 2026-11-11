@@ -1,12 +1,11 @@
 <?php
 // app/models/AnalisisModel.php
-require_once __DIR__ . '/../includes/koneksi.php';
 
 class AnalisisModel {
     private $db;
 
-    public function __construct() {
-        global $koneksi;
+    // KUNCI PERBAIKAN: Tangkap koneksi via Dependency Injection
+    public function __construct($koneksi) {
         $this->db = $koneksi;
         $this->ensureNilaiTable();
     }
@@ -165,11 +164,6 @@ class AnalisisModel {
         return $dataset;
     }
 
-    /**
-     * Data latih acuan standar (Baseline Training Dataset)
-     * Mewakili profil calon mahasiswa historis dengan kombinasi nilai kriteria dan metrik SPK.
-     * Digunakan secara konsisten sebagai landasan probabilitas Naive Bayes.
-     */
     public function getBaselineTrainingData() {
         $subScores = [
             1 => 0.25, 2 => 0.5, 3 => 0.75, // C1
@@ -207,7 +201,7 @@ class AnalisisModel {
         };
 
         return [
-            // --- KELOMPOK DITERIMA (Nilai Rapor, TKA, Bahasa Inggris, & Prestasi Memenuhi Standar) ---
+            // --- KELOMPOK DITERIMA ---
             $buildProfile(3, 6, 9, 12, 15, 'Diterima', 'Latih Diterima 1 (Sangat Baik)'),
             $buildProfile(3, 5, 8, 12, 15, 'Diterima', 'Latih Diterima 2 (Tinggi Nasional)'),
             $buildProfile(3, 5, 8, 12, 14, 'Diterima', 'Latih Diterima 3 (Tinggi Teratur)'),
@@ -223,7 +217,7 @@ class AnalisisModel {
             $buildProfile(2, 4, 8, 12, 14, 'Diterima', 'Latih Diterima 13 (TKA & Non-Akademik Kuat)'),
             $buildProfile(3, 4, 7, 11, 14, 'Diterima', 'Latih Diterima 14 (Standar Lolos)'),
 
-            // --- KELOMPOK DITOLAK (Nilai di Bawah Standar Kelulusan Universitas) ---
+            // --- KELOMPOK DITOLAK ---
             $buildProfile(1, 4, 7, 10, 13, 'Ditolak', 'Latih Ditolak 1 (Rendah Semua)'),
             $buildProfile(1, 4, 7, 10, 14, 'Ditolak', 'Latih Ditolak 2 (Rapor & TKA Rendah)'),
             $buildProfile(1, 4, 7, 11, 13, 'Ditolak', 'Latih Ditolak 3 (Rapor Rendah)'),
@@ -239,13 +233,7 @@ class AnalisisModel {
         ];
     }
 
-    /**
-     * Menjalankan klasifikasi Naive Bayes untuk semua pendaftar berstatus "Menunggu".
-     * Menganalisis probabilitas berdasarkan nilai kriteria dan metrik yang diinputkan.
-     * Jika probabilitas penerimaan lebih tinggi, ubah status menjadi "Diterima", jika tidak "Ditolak".
-     */
     public function jalankanKlasifikasi() {
-        // Hanya analisis pendaftar dengan status 'Menunggu'
         $testingData = $this->getDatasetByStatus(['Menunggu']);
 
         if (empty($testingData)) {
@@ -255,7 +243,6 @@ class AnalisisModel {
             ];
         }
 
-        // Ambil data latih dari database jika sudah ada riwayat Diterima & Ditolak
         $dbTraining = $this->getDatasetByStatus(['Diterima', 'Ditolak']);
         $jml_dit_db = 0;
         $jml_tol_db = 0;
@@ -264,7 +251,6 @@ class AnalisisModel {
             elseif ($t['status'] === 'Ditolak') $jml_tol_db++;
         }
 
-        // Gabungkan dengan baseline training data agar sistem selalu memiliki basis probabilitas yang stabil dan valid
         $baseline = $this->getBaselineTrainingData();
         $trainingData = array_merge($dbTraining, $baseline);
 
@@ -277,7 +263,6 @@ class AnalisisModel {
             elseif ($t['status'] === 'Ditolak') $jml_ditolak++;
         }
 
-        // Prior Probability: P(Diterima) & P(Ditolak)
         $prior_diterima = $jml_diterima / $jml_latih;
         $prior_ditolak = $jml_ditolak / $jml_latih;
 
@@ -288,7 +273,6 @@ class AnalisisModel {
             $prob_diterima = $prior_diterima;
             $prob_ditolak = $prior_ditolak;
 
-            // Evaluasi Posterior untuk setiap fitur nilai yang diinputkan
             foreach ($test['features'] as $key => $val) {
                 $match_diterima = 0;
                 $match_ditolak = 0;
@@ -300,7 +284,6 @@ class AnalisisModel {
                     }
                 }
 
-                // Laplace Smoothing (V = 3 karena setiap kriteria & metrik memiliki 3 kategori tingkatan)
                 $laplace_diterima = ($match_diterima + 1) / ($jml_diterima + 3);
                 $laplace_ditolak  = ($match_ditolak + 1) / ($jml_ditolak + 3);
 
@@ -311,7 +294,6 @@ class AnalisisModel {
             $total_prob = $prob_diterima + $prob_ditolak;
             $persen_diterima = ($total_prob > 0) ? ($prob_diterima / $total_prob) * 100 : 0;
 
-            // Keputusan kelulusan: Jika probabilitas diterima >= ditolak, status diubah menjadi Diterima
             $keputusan = ($prob_diterima >= $prob_ditolak) ? 'Diterima' : 'Ditolak';
 
             $hasil_klasifikasi[] = [
@@ -324,13 +306,10 @@ class AnalisisModel {
                 'keputusan'     => $keputusan
             ];
 
-            // UPDATE STATUS DI DATABASE:
-            // Sesuai permintaan: yang dianalisis adalah 'Menunggu'. Jika diterima maka ubah statusnya menjadi 'Diterima' (atau 'Ditolak').
             $id_mhs = (int)$test['id'];
             mysqli_query($this->db, "UPDATE mahasiswa SET status = '$keputusan' WHERE {$idCol} = '$id_mhs'");
         }
 
-        // Urutkan (Ranking) dari persentase Diterima tertinggi ke terendah
         usort($hasil_klasifikasi, function($a, $b) {
             return $b['prob_diterima'] <=> $a['prob_diterima'];
         });

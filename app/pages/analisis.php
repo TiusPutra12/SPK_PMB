@@ -1,8 +1,12 @@
 <?php
 // app/pages/analisis.php
+
+// KUNCI PERBAIKAN: Sertakan koneksi database
+require_once __DIR__ . '/../includes/koneksi.php';
 require_once __DIR__ . '/../controllers/AnalisisController.php';
 
-$nbCtrl = new AnalisisController();
+// Kirimkan variabel $koneksi ke dalam controller
+$nbCtrl = new AnalisisController($koneksi);
 $nbCtrl->handleRequest();
 
 $menunggu_count = $nbCtrl->getPendingCount();
